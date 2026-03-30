@@ -146,23 +146,6 @@ If a deployment fails:
 2. purge `WP Rocket`
 3. validate headers again at origin
 
-## Real Validation Performed
-
-Validated environments:
-
-- `milatalent.cat`
-  - original AccelerateWP-style pattern
-  - origin headers confirmed with `last-modified`, `accept-ranges`, and `gzip`
-- `reliquiaesanctorumincatalonia.cat`
-  - real takeover to `managed mode`
-  - Cloudflare in front, `serve_gzip_variant = false`
-  - origin remained correct after takeover
-- `www.injecciodeplastics.com` + `www.inyecciondeplastico.es`
-  - WordPress + WPML with one domain per language
-  - real validation of `{HTTP_HOST}` for multilingual multi-domain cache paths
-  - real validation of `cache_webp = 1`
-  - temporary test switching back to the non-WebP path and restoring it afterwards
-
 ## Updates via GitHub
 
 The plugin checks GitHub Releases at:
