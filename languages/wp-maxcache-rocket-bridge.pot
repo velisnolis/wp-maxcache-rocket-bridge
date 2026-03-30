@@ -1,0 +1,257 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: WP Rocket + MAxCache Bridge 0.2.0\n"
+"POT-Creation-Date: 2026-03-30 15:30+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Domain: wp-maxcache-rocket-bridge\n"
+
+msgid "MAxCache Bridge"
+msgstr ""
+
+msgid "WP Rocket + MAxCache Bridge"
+msgstr ""
+
+msgid "Diagnòstic de compatibilitat, snippet recomanat i verificació ràpida de capçaleres."
+msgstr ""
+
+msgid "Estat de l'entorn"
+msgstr ""
+
+msgid "Run checks"
+msgstr ""
+
+msgid "Snippet recomanat"
+msgstr ""
+
+msgid "Auto-sync WP Rocket:"
+msgstr ""
+
+msgid "ON"
+msgstr ""
+
+msgid "OFF"
+msgstr ""
+
+msgid "Habilitar monitorització automàtica de canvis de WP Rocket"
+msgstr ""
+
+msgid "Guardar auto-sync"
+msgstr ""
+
+msgid "Auto-apply .htaccess:"
+msgstr ""
+
+msgid "Retention backups:"
+msgstr ""
+
+msgid "Aplicar automàticament el bloc WMRB a .htaccess (amb backup)"
+msgstr ""
+
+msgid "Guardar auto-apply"
+msgstr ""
+
+msgid "Serve gzip variant:"
+msgstr ""
+
+msgid "Servir fitxer .gz directament des de MaxCachePath (només recomanat sense Cloudflare/proxy)"
+msgstr ""
+
+msgid "Guardar gzip variant"
+msgstr ""
+
+msgid "Sincronització WP Rocket:"
+msgstr ""
+
+msgid "URI %1$d (%2$d sincronitzades), UA %3$d (%4$d sincronitzades), Cookies %5$d (%6$d sincronitzades)."
+msgstr ""
+
+msgid "Estat de sincronització:"
+msgstr ""
+
+msgid "in_sync"
+msgstr ""
+
+msgid "pending_apply"
+msgstr ""
+
+msgid "últim canvi detectat:"
+msgstr ""
+
+msgid "últim aplicat:"
+msgstr ""
+
+msgid "Últim backup:"
+msgstr ""
+
+msgid "Últim error:"
+msgstr ""
+
+msgid "Apply snippet now"
+msgstr ""
+
+msgid "Rollback last backup"
+msgstr ""
+
+msgid "Mark snippet as applied"
+msgstr ""
+
+msgid "Copy snippet"
+msgstr ""
+
+msgid "Download snippet.txt"
+msgstr ""
+
+msgid "Resultat proves ràpides"
+msgstr ""
+
+msgid "Purge observer (debug mode)"
+msgstr ""
+
+msgid "Debug mode:"
+msgstr ""
+
+msgid "No hi ha esdeveniments registrats."
+msgstr ""
+
+msgid "Time"
+msgstr ""
+
+msgid "Hook"
+msgstr ""
+
+msgid "Clear log"
+msgstr ""
+
+msgid "Rollout / rollback ràpid"
+msgstr ""
+
+msgid "Instal·la en staging i valida diagnòstic."
+msgstr ""
+
+msgid "Aplica snippet manualment al servidor i fes purga WP Rocket."
+msgstr ""
+
+msgid "Valida capçaleres a origen amb curl."
+msgstr ""
+
+msgid "Per rollback: restaura .htaccess backup i torna a purgar."
+msgstr ""
+
+msgid "Overall:"
+msgstr ""
+
+msgid "Check"
+msgstr ""
+
+msgid "Status"
+msgstr ""
+
+msgid "Reason"
+msgstr ""
+
+msgid "Action"
+msgstr ""
+
+msgid "Encara no executat."
+msgstr ""
+
+msgid "URL:"
+msgstr ""
+
+msgid "Nota:"
+msgstr ""
+
+msgid "Cloudflare pot mostrar DYNAMIC i no és bloquejant si l’origen és bo."
+msgstr ""
+
+msgid "Permisos insuficients."
+msgstr ""
+
+msgid "WP Rocket detectat correctament."
+msgstr ""
+
+msgid "WP Rocket no està actiu o no és detectable."
+msgstr ""
+
+msgid "Activa WP Rocket abans d’usar el bridge."
+msgstr ""
+
+msgid "Entorn Apache detectat."
+msgstr ""
+
+msgid "No s’ha pogut confirmar Apache des de WordPress."
+msgstr ""
+
+msgid "Valida manualment stack i presència de mod_maxcache."
+msgstr ""
+
+msgid ".htaccess no trobat."
+msgstr ""
+
+msgid "Comprova si el teu entorn usa una altra capa de routing."
+msgstr ""
+
+msgid ".htaccess existeix però no és llegible."
+msgstr ""
+
+msgid "Revisa permisos de fitxer per a diagnòstic."
+msgstr ""
+
+msgid "Snippet MaxCache detectat a .htaccess."
+msgstr ""
+
+msgid "No s’ha detectat bloc MaxCache a .htaccess."
+msgstr ""
+
+msgid "Afegeix manualment el snippet recomanat."
+msgstr ""
+
+msgid "Directori de cache de WP Rocket no trobat."
+msgstr ""
+
+msgid "Genera cache amb una visita/purga i torna a provar."
+msgstr ""
+
+msgid "No s’han trobat fitxers HTML cachejats encara."
+msgstr ""
+
+msgid "Força generació de cache des de WP Rocket."
+msgstr ""
+
+msgid "Hi ha fitxers cachejats a WP Rocket."
+msgstr ""
+
+msgid "last-modified present"
+msgstr ""
+
+msgid "last-modified missing"
+msgstr ""
+
+msgid "accept-ranges present"
+msgstr ""
+
+msgid "accept-ranges missing"
+msgstr ""
+
+msgid "gzip encoding present"
+msgstr ""
+
+msgid "gzip encoding missing"
+msgstr ""
+
+msgid ".htaccess no accessible (read/write)."
+msgstr ""
+
+msgid "No s’ha pogut crear backup de .htaccess."
+msgstr ""
+
+msgid "No s’ha pogut escriure .htaccess."
+msgstr ""
+
+msgid "No hi ha backup vàlid per rollback."
+msgstr ""
+
+msgid "Rollback fallit: no es pot escriure .htaccess."
+msgstr ""
