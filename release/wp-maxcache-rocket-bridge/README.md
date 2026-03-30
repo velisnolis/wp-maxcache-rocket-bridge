@@ -179,4 +179,12 @@ Expected release flow:
 
 This plugin is an independent utility built to operate with WordPress, WP Rocket, Apache `mod_maxcache`, and publicly documented CloudLinux / AccelerateWP configuration patterns.
 
-It is not affiliated with, endorsed by, or officially supported by WP Rocket, CloudLinux, AccelerateWP, Apache, or any other vendor mentioned in this repository. It is distributed as-is, without warranties, and each deployment remains the responsibility of the operator.
+It is not affiliated with, endorsed by, sponsored by, or officially supported by WP Rocket, CloudLinux, AccelerateWP, Apache, or any other vendor or trademark holder mentioned in this repository.
+
+All product names, trademarks, and registered trademarks remain the property of their respective owners. References are used only to describe interoperability and operational context.
+
+This software is distributed as-is, without warranties or guarantees of any kind. Use it at your own risk. You are responsible for validating it in your own infrastructure, reviewing the generated configuration, and deciding whether it is appropriate for your environment.
+
+## License
+
+This repository is released under the MIT License. See [LICENSE](LICENSE).

@@ -7,6 +7,8 @@
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Text Domain: wp-maxcache-rocket-bridge
+ * License: MIT
+ * License URI: https://opensource.org/license/mit
  * Update URI: https://github.com/velisnolis/wp-maxcache-rocket-bridge
  */
 
