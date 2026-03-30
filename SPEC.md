@@ -1,60 +1,60 @@
-# WP Rocket + MAxCache Bridge
+# WP Rocket + MAxCache Bridge Spec
 
-## Objectiu
+## Goal
 
-Crear un plugin WordPress que permeti usar `WP Rocket` com a front principal de cache i invalidació, mentre el bridge governa una única capa `mod_maxcache` a Apache.
+Build a WordPress plugin that keeps `WP Rocket` as the primary cache and invalidation UI while the bridge governs a single Apache `mod_maxcache` layer.
 
-El producte objectiu no és “obrir una segona consola de cache”, sinó aquest flux:
+The product goal is not "a second cache console". The target flow is:
 
-1. instal·lar plugin
-2. passar a `managed mode`
-3. tocar `WP Rocket`
-4. despreocupar-se del bridge excepte per diagnòstic o compatibilitat
+1. install the plugin
+2. move the site to `managed mode`
+3. keep using `WP Rocket`
+4. open the bridge only for diagnostics, compatibility, takeover, or rollback
 
-## Principis de producte
+## Product Principles
 
-- `WP Rocket` és la font principal dels canvis habituals.
-- El bridge només afegeix govern sobre `mod_maxcache`.
-- La configuració base ha d’assemblar-se als defaults oficials de CloudLinux / AccelerateWP.
-- El bridge no ha de coexistir en silenci amb múltiples blocs `MaxCache`.
-- Casos especials com Cloudflare han de ser overrides explícits, no hacks ocults.
+- `WP Rocket` is the main source of day-to-day cache changes
+- the bridge only adds governance over `mod_maxcache`
+- the base configuration should stay close to official CloudLinux / AccelerateWP defaults
+- the bridge must not silently coexist with multiple active `MaxCache` blocks
+- special cases such as Cloudflare should be explicit overrides, not hidden hacks
 
-## Context validat
+## Validated Context
 
-- `milatalent.cat` usa el patró original d’AccelerateWP amb un únic bloc `MaxCache`.
-- `reliquiaesanctorumincatalonia.cat` s’ha migrat en prova real a `managed mode`.
-- A Cloudflare, `cf-cache-status: DYNAMIC` no invalida l’objectiu si l’origen respon amb patró estàtic correcte.
-- `www.injecciodeplastics.com` i `www.inyecciondeplastico.es` validen el cas multidomini per idioma amb `WPML`.
-- `www.injecciodeplastics.com` valida també el cas real de `cache_webp`.
+- `milatalent.cat` uses the original AccelerateWP-style single-block pattern
+- `reliquiaesanctorumincatalonia.cat` was migrated in a real test to `managed mode`
+- `cf-cache-status: DYNAMIC` is acceptable when origin still serves the correct static pattern
+- `www.injecciodeplastics.com` / `www.inyecciondeplastico.es` validated multilingual multi-domain handling through `{HTTP_HOST}`
+- `www.injecciodeplastics.com` also validated the real `cache_webp` case
 
-## No-objectius
+## Non-Goals
 
-- No reemplaçar `WP Rocket`.
-- No implementar una segona cache d’aplicació.
-- No pretendre ser suport oficial de CloudLinux, WP Rocket o Apache.
-- No gestionar regles de Cloudflare automàticament.
+- replacing `WP Rocket`
+- implementing a second application cache
+- claiming official support from CloudLinux, WP Rocket, or Apache
+- managing Cloudflare rules automatically
 
-## Requisits tècnics
+## Technical Requirements
 
 - WordPress 6.0+
 - PHP 7.4+
-- WP Rocket actiu
-- Apache 2.4 amb `mod_maxcache`
-- estructura de cache de WP Rocket compatible amb `MaxCachePath`
+- WP Rocket active
+- Apache 2.4 with `mod_maxcache`
+- WP Rocket cache layout compatible with `MaxCachePath`
 
-## Arquitectura
+## Architecture
 
-### 1) Jerarquia de configuració
+### 1. Configuration Hierarchy
 
-L’snippet final es construeix amb aquesta prioritat:
+The final snippet is built in this order:
 
-1. baseline CloudLinux / AccelerateWP
-2. exclusions i senyals de `WP Rocket`
-3. overrides explícits del bridge
+1. CloudLinux / AccelerateWP baseline
+2. exclusions and signals from `WP Rocket`
+3. explicit bridge overrides
 
-### 2) Modes de govern
+### 2. Ownership Modes
 
-El bridge ha de detectar un d’aquests modes:
+The bridge detects one of these modes:
 
 - `managed`
 - `unmanaged`
@@ -62,27 +62,27 @@ El bridge ha de detectar un d’aquests modes:
 - `conflict`
 - `unreadable`
 
-Regla:
+Rules:
 
-- només en `managed` o `unmanaged` es permet `auto_apply`
-- en `external` o `conflict` el bridge ha de demanar takeover explícit
+- `auto_apply` is only allowed in `managed` or `unmanaged`
+- in `external` or `conflict`, takeover must be explicit
 
-### 3) Takeover
+### 3. Takeover
 
-Acció pensada per instal·lacions reals amb blocs previs d’AccelerateWP/manuals.
+Designed for real sites that already have manual or AccelerateWP-managed `MaxCache` blocks.
 
-Passos:
+Steps:
 
-1. backup de `.htaccess`
-2. eliminació de tots els blocs `maxcache_module`
-3. escriptura d’un únic bloc WMRB
-4. pas a `managed` + `in_sync`
+1. backup `.htaccess`
+2. remove all `maxcache_module` blocks
+3. write a single WMRB block
+4. move to `managed` + `in_sync`
 
-### 4) Sync amb WP Rocket
+### 4. Sync With WP Rocket
 
-El bridge observa `wp_rocket_settings` i recalcula l’snippet.
+The bridge observes `wp_rocket_settings` and rebuilds the snippet.
 
-Fonts principals actuals:
+Main sources currently used:
 
 - `cache_reject_uri`
 - `cache_reject_ua`
@@ -91,108 +91,107 @@ Fonts principals actuals:
 - `cache_logged_user`
 - `secret_cache_key`
 
-### 5) Compatibilitat WebP
+### 5. WebP Compatibility
 
-Si `WP Rocket` genera variants WebP, el bridge ho ha de reflectir al `MaxCachePath` amb `{WEBP_SUFFIX}`.
+If `WP Rocket` generates WebP variants, the bridge must reflect that in `MaxCachePath` through `{WEBP_SUFFIX}`.
 
-Regles:
+Rules:
 
-- auto-detecció a partir de `cache_webp`
-- override manual opcional via `serve_webp_variant`
-- si desapareix la variant WebP a `WP Rocket`, el bridge torna al path sense `{WEBP_SUFFIX}`
+- auto-detect from `cache_webp`
+- optional manual override via `serve_webp_variant`
+- if WebP generation disappears, fall back to the non-WebP path
 
-### 6) User cache per usuaris logats
+### 6. Logged-In User Cache
 
-Objectiu de la fase actual:
+Current scope:
 
-- suportar el mode principal de `WP Rocket` per caché per usuari
-- no suportar encara el mode avançat de caché compartida per usuaris logats
+- support the main WP Rocket per-user logged-in cache mode
+- do not support shared logged-in cache yet
 
-Regles:
+Rules:
 
-- si `cache_logged_user=1` i hi ha `secret_cache_key`, el bridge usa `MaxCacheLoggedHash` i `{USER_SUFFIX}`
-- en aquest cas `wordpress_logged_in_.+` s’ha d’eliminar de `MaxCacheExcludeCookie`
-- si falta `secret_cache_key`, el bridge no ha d’intentar servir caché per usuari
-- `USER_SHARED_SUFFIX` queda fora de la fase actual fins a tenir entorn real de prova
+- if `cache_logged_user=1` and `secret_cache_key` exists, use `MaxCacheLoggedHash` and `{USER_SUFFIX}`
+- when user cache is enabled, `wordpress_logged_in_.+` must be removed from `MaxCacheExcludeCookie`
+- if `secret_cache_key` is missing, do not attempt per-user cache serving
+- `{USER_SHARED_SUFFIX}` is intentionally out of scope until a real test environment exists
 
-### 7) Compatibilitat Gzip
+### 7. Gzip Compatibility
 
-El comportament general pot seguir el patró `html{GZIP_SUFFIX}`, però s’ha de poder desactivar per entorns amb proxy/CDN on això pugui provocar descàrrega d’HTML o comportament incorrecte.
+The general path pattern can follow `html{GZIP_SUFFIX}`, but it must also be possible to disable it for proxy/CDN setups where that may cause broken responses or forced downloads.
 
-Opció:
+Option:
 
 - `serve_gzip_variant`
 
-Intenció:
+Intent:
 
-- `true` per casos compatibles
-- `false` per entorns tipus Cloudflare quan convingui
+- `true` for compatible environments
+- `false` for Cloudflare-like setups when safer
 
-## Interfície d’usuari
+## User Interface
 
-Pantalla única a `Tools > MAxCache Bridge` amb:
+Single screen in `Tools > MAxCache Bridge` with:
 
-- checks d’entorn
-- mode de gestió MaxCache
-- resum de sync amb `WP Rocket`
-- estat `in_sync / pending_apply`
-- accions:
+- environment checks
+- MaxCache ownership mode
+- sync summary with `WP Rocket`
+- `in_sync / pending_apply` state
+- actions:
   - `Run checks`
   - `Apply snippet now`
   - `Take over MaxCache management`
   - `Rollback last backup`
-- preview del bloc
-- quick test sobre URL pública
+- snippet preview
+- public URL quick test
 
-## Seguretat i operació
+## Safety and Operations
 
-- backup abans d’escriure `.htaccess`
-- rollback accessible
-- nonces a totes les accions d’admin
-- capacitat mínima `manage_options`
-- el bridge no autoaplica quan detecta govern extern o conflicte
+- backup before writing `.htaccess`
+- visible rollback
+- WordPress nonces on admin actions
+- minimum capability: `manage_options`
+- no auto-apply when external ownership or conflict is detected
 
-## Validació
+## Validation
 
-### Cas 1: patró AccelerateWP original
+### Case 1: Original AccelerateWP Pattern
 
 - `milatalent.cat`
-- un sol bloc `MaxCache`
-- headers correctes a origen
+- single `MaxCache` block
+- correct origin headers
 
-### Cas 2: takeover cap a managed mode
+### Case 2: Takeover To Managed Mode
 
 - `reliquiaesanctorumincatalonia.cat`
-- existia configuració MaxCache prèvia
-- takeover executat amb backup
-- estat final `managed` i `in_sync`
-- origen correcte després del canvi
+- pre-existing MaxCache configuration
+- takeover executed with backup
+- final state `managed` + `in_sync`
+- correct origin behaviour after the change
 
-### Cas 3: multidomini + WebP
+### Case 3: Multi-Domain + WebP
 
 - `www.injecciodeplastics.com`
 - `www.inyecciondeplastico.es`
-- validació real de `{HTTP_HOST}` per domini/idioma
-- validació real de `cache_webp = 1`
-- prova temporal de retorn a path sense WebP i restauració posterior
+- real validation of `{HTTP_HOST}` by language/domain
+- real validation of `cache_webp = 1`
+- temporary fallback test to non-WebP path and later restoration
 
-## Roadmap proper
+## Current Release Scope
 
 ### v0.2.1
 
-- fix updater slug
-- fingerprint de l’snippet efectiu
-- baseline CloudLinux més fidel
-- detecció de `managed/external/conflict`
-- takeover a mode gestionat
-- aclariment del quick test públic
-- suport automàtic de WebP via `cache_webp`
-- validació multidomini amb `WPML` per domini
-- suport inicial de user cache via `MaxCacheLoggedHash` + `{USER_SUFFIX}`
+- updater slug fix
+- fingerprint based on the effective snippet
+- CloudLinux-style baseline
+- `managed/external/conflict` detection
+- takeover to managed mode
+- clearer wording for the public quick test
+- automatic WebP support via `cache_webp`
+- validated multi-domain behaviour with WPML domain mapping
+- initial logged-in user cache support via `MaxCacheLoggedHash` + `{USER_SUFFIX}`
 
-### següent fase
+## Next Work
 
-- proves reals de login/logout per user cache
-- millor representació de proves d’origen a la UI
-- revisió de textos i readme públic
-- paquet públic i release de GitHub
+- real login/logout validation for logged-in user cache
+- better origin-test representation in the UI
+- public release polish

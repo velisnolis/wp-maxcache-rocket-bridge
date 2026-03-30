@@ -74,7 +74,7 @@ class WMRB_Github_Updater {
 		$info->homepage    = 'https://github.com/' . WMRB_GITHUB_REPO;
 		$info->download_link = isset( $release['package'] ) ? (string) $release['package'] : '';
 		$info->sections    = array(
-			'description' => __( 'Bridge entre WP Rocket i mod_maxcache amb diagnòstic, sync i auto-apply segur.', 'wp-maxcache-rocket-bridge' ),
+			'description' => __( 'Bridge between WP Rocket and mod_maxcache with diagnostics, sync, and safe auto-apply.', 'wp-maxcache-rocket-bridge' ),
 			'changelog'   => isset( $release['body'] ) ? wp_kses_post( wpautop( (string) $release['body'] ) ) : '',
 		);
 
