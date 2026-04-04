@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WP Rocket + MAxCache Bridge
  * Description: Diagnostic and helper bridge between WP Rocket and Apache mod_maxcache.
- * Version: 0.2.1
+ * Version: 0.2.2
  * Author: Miras
  * Requires at least: 6.0
  * Requires PHP: 7.4
@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'WMRB_VERSION', '0.2.1' );
+define( 'WMRB_VERSION', '0.2.2' );
 define( 'WMRB_PLUGIN_FILE', __FILE__ );
 define( 'WMRB_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'WMRB_GITHUB_REPO', 'velisnolis/wp-maxcache-rocket-bridge' );
