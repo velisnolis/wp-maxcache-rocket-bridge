@@ -53,6 +53,7 @@ class WMRB_Admin_Page {
 		add_action( 'admin_post_wmrb_mark_applied', array( $this, 'handle_mark_applied' ) );
 		add_action( 'admin_post_wmrb_toggle_auto_sync', array( $this, 'handle_toggle_auto_sync' ) );
 		add_action( 'admin_post_wmrb_toggle_auto_apply', array( $this, 'handle_toggle_auto_apply' ) );
+		add_action( 'admin_post_wmrb_toggle_bot_user_agents', array( $this, 'handle_toggle_bot_user_agents' ) );
 		add_action( 'admin_post_wmrb_toggle_gzip_variant', array( $this, 'handle_toggle_gzip_variant' ) );
 		add_action( 'admin_post_wmrb_toggle_webp_variant', array( $this, 'handle_toggle_webp_variant' ) );
 		add_action( 'admin_post_wmrb_apply_now', array( $this, 'handle_apply_now' ) );
@@ -142,6 +143,22 @@ class WMRB_Admin_Page {
 		update_option( WMRB_Plugin::OPTION_KEY, $current );
 
 		wp_safe_redirect( admin_url( 'tools.php?page=wmrb-bridge&wmrb=auto-apply-updated' ) );
+		exit;
+	}
+
+	public function handle_toggle_bot_user_agents() {
+		$this->assert_permissions_and_nonce( 'wmrb_toggle_bot_user_agents' );
+
+		$enabled = isset( $_POST['serve_bot_user_agents'] ) && '1' === (string) $_POST['serve_bot_user_agents'];
+		$this->options['serve_bot_user_agents'] = $enabled;
+
+		$current = get_option( WMRB_Plugin::OPTION_KEY, array() );
+		$current = is_array( $current ) ? $current : array();
+		$current['serve_bot_user_agents'] = $enabled;
+		update_option( WMRB_Plugin::OPTION_KEY, $current );
+
+		$this->sync_manager->refresh_state_from_current_fingerprint();
+		wp_safe_redirect( admin_url( 'tools.php?page=wmrb-bridge&wmrb=bot-ua-updated' ) );
 		exit;
 	}
 
@@ -261,6 +278,20 @@ class WMRB_Admin_Page {
 					<?php echo esc_html__( 'Aplicar automàticament el bloc WMRB a .htaccess (amb backup)', 'wp-maxcache-rocket-bridge' ); ?>
 				</label>
 				<?php submit_button( __( 'Guardar auto-apply', 'wp-maxcache-rocket-bridge' ), 'secondary', 'submit', false ); ?>
+			</form>
+			<p>
+				<?php echo esc_html__( 'Serve bot/crawler cache:', 'wp-maxcache-rocket-bridge' ); ?>
+				<strong><?php echo ! empty( $this->options['serve_bot_user_agents'] ) ? esc_html__( 'ON', 'wp-maxcache-rocket-bridge' ) : esc_html__( 'OFF', 'wp-maxcache-rocket-bridge' ); ?></strong>
+			</p>
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin-bottom:8px;">
+				<?php wp_nonce_field( 'wmrb_toggle_bot_user_agents' ); ?>
+				<input type="hidden" name="action" value="wmrb_toggle_bot_user_agents" />
+				<label>
+					<input type="checkbox" name="serve_bot_user_agents" value="1" <?php checked( ! empty( $this->options['serve_bot_user_agents'] ) ); ?> />
+					<?php echo esc_html__( 'Permetre que bots i crawlers rebin HTML cachejat des de MaxCache.', 'wp-maxcache-rocket-bridge' ); ?>
+				</label>
+				<p class="description"><?php echo esc_html__( 'Desactivat per defecte. Activar-ho redueix PHP en webs pràcticament estàtiques, però els bots poden veure HTML obsolet fins a la propera purga de WP Rocket.', 'wp-maxcache-rocket-bridge' ); ?></p>
+				<?php submit_button( __( 'Guardar bot/crawler cache', 'wp-maxcache-rocket-bridge' ), 'secondary', 'submit', false ); ?>
 			</form>
 			<p>
 				<?php echo esc_html__( 'Serve gzip variant:', 'wp-maxcache-rocket-bridge' ); ?>

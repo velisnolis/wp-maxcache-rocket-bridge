@@ -54,6 +54,7 @@ class WMRB_Plugin {
 			'debug_mode'                  => false,
 			'auto_sync_enabled'           => true,
 			'auto_apply_htaccess'         => true,
+			'serve_bot_user_agents'       => false,
 			'serve_gzip_variant'          => false,
 			'serve_webp_variant'          => false,
 			'custom_cache_path_template'  => '',

@@ -107,6 +107,15 @@ class WMRB_Snippet_Service {
 	/**
 	 * @var array<int,string>
 	 */
+	private static $bot_ua_exclusions = array(
+		'bot',
+		'crawl',
+		'spider',
+	);
+
+	/**
+	 * @var array<int,string>
+	 */
 	private static $base_cookie_exclusions = array(
 		'wordpress_logged_in_.+',
 		'wp-postpass_',
@@ -174,13 +183,14 @@ class WMRB_Snippet_Service {
 	 */
 	public function get_sync_summary() {
 		$uri_rocket = array_values( array_unique( array_filter( array_map( array( $this, 'sanitize_uri_pattern' ), $this->get_wp_rocket_array_setting( 'cache_reject_uri' ) ) ) ) );
-		$ua_rocket = array_values( array_unique( array_filter( array_map( array( $this, 'sanitize_pipe_fragment' ), $this->get_wp_rocket_array_setting( 'cache_reject_ua' ) ) ) ) );
+		$ua_rocket = $this->get_effective_rocket_ua_exclusions();
 		$cookie_rocket = array_values( array_unique( array_filter( array_map( array( $this, 'sanitize_pipe_fragment' ), $this->get_wp_rocket_array_setting( 'cache_reject_cookies' ) ) ) ) );
+		$base_uas      = $this->get_base_ua_exclusions();
 		$base_cookies  = $this->get_base_cookie_exclusions();
 
 		return array(
 			'uri_total'     => 1 + count( $uri_rocket ),
-			'ua_total'      => count( array_unique( array_merge( self::$base_ua_exclusions, $ua_rocket ) ) ),
+			'ua_total'      => count( array_unique( array_merge( $base_uas, $ua_rocket ) ) ),
 			'cookie_total'  => count( array_unique( array_merge( $base_cookies, $cookie_rocket ) ) ),
 			'uri_synced'    => count( $uri_rocket ),
 			'ua_synced'     => count( $ua_rocket ),
@@ -246,10 +256,9 @@ class WMRB_Snippet_Service {
 	}
 
 	private function build_ua_exclusions() {
-		$rocket_exclusions = $this->get_wp_rocket_array_setting( 'cache_reject_ua' );
-		$rocket_exclusions = array_map( array( $this, 'sanitize_pipe_fragment' ), $rocket_exclusions );
+		$rocket_exclusions = $this->get_effective_rocket_ua_exclusions();
 
-		$values = array_values( array_unique( array_filter( array_merge( self::$base_ua_exclusions, $rocket_exclusions ) ) ) );
+		$values = array_values( array_unique( array_filter( array_merge( $this->get_base_ua_exclusions(), $rocket_exclusions ) ) ) );
 		return implode( '|', $values );
 	}
 
@@ -278,6 +287,53 @@ class WMRB_Snippet_Service {
 		}
 
 		return $values;
+	}
+
+	/**
+	 * @return array<int,string>
+	 */
+	private function get_base_ua_exclusions() {
+		$values = self::$base_ua_exclusions;
+		if ( empty( $this->options['serve_bot_user_agents'] ) ) {
+			$values = array_merge( $values, self::$bot_ua_exclusions );
+		}
+
+		return $values;
+	}
+
+	/**
+	 * @return array<int,string>
+	 */
+	private function get_effective_rocket_ua_exclusions() {
+		$rocket_exclusions = $this->get_wp_rocket_array_setting( 'cache_reject_ua' );
+		$rocket_exclusions = array_values( array_unique( array_filter( array_map( array( $this, 'sanitize_pipe_fragment' ), $rocket_exclusions ) ) ) );
+
+		return array_values( array_filter( $rocket_exclusions, array( $this, 'is_non_generic_bot_ua_exclusion' ) ) );
+	}
+
+	private function is_non_generic_bot_ua_exclusion( $value ) {
+		return ! $this->is_generic_bot_ua_exclusion( $value );
+	}
+
+	private function is_generic_bot_ua_exclusion( $value ) {
+		$value = trim( (string) $value );
+		$value = trim( $value, '()' );
+		if ( '' === $value ) {
+			return false;
+		}
+
+		$parts = array_filter( array_map( 'trim', explode( '|', $value ) ) );
+		if ( empty( $parts ) ) {
+			return false;
+		}
+
+		foreach ( $parts as $part ) {
+			if ( ! in_array( strtolower( $part ), self::$bot_ua_exclusions, true ) ) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	/**

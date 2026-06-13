@@ -26,6 +26,7 @@ This plugin does not try to replace `WP Rocket` or `AccelerateWP`. Its purpose i
 - Can take over an existing external `MaxCache` configuration and move the site to `managed mode`
 - Keeps `.htaccess` backups and exposes rollback
 - Watches `wp_rocket_settings` and can auto-apply the managed block when the bridge owns it
+- Can serve static HTML to generic bots/crawlers for mostly static or archive sites, off by default
 - Adapts `MaxCachePath` automatically for:
   - WebP variants via `cache_webp` -> `{WEBP_SUFFIX}`
   - logged-in user cache via `cache_logged_user` + `secret_cache_key` -> `MaxCacheLoggedHash` + `{USER_SUFFIX}`
@@ -60,9 +61,35 @@ Bridge options stored in `wmrb_options`:
 - `debug_mode`
 - `auto_sync_enabled`
 - `auto_apply_htaccess`
+- `serve_bot_user_agents`
 - `serve_gzip_variant`
 - `serve_webp_variant`
 - `custom_cache_path_template`
+
+## Bot / Crawler Cache
+
+`serve_bot_user_agents` controls whether generic crawler user agents are allowed to hit the static MaxCache HTML path.
+
+Default: `false`.
+
+When disabled, the bridge adds the conservative generic UA exclusions:
+
+- `bot`
+- `crawl`
+- `spider`
+
+The bridge de-duplicates those generic fragments if they also come from WP Rocket's rejected user agents. When this option is enabled, the generated `MaxCacheExcludeUA` rule drops the generic crawler exclusions entirely.
+
+Practical recommendation:
+
+- mostly static/archive sites: `true` can reduce PHP pressure from crawlers
+- sites with frequent edits, personalization, checkout, memberships, or time-sensitive content: keep `false`
+- if the site has bot-specific PHP behavior, keep `false`
+
+Risk:
+
+- bots may receive stale HTML until WP Rocket purges and regenerates the cache
+- any bot-specific PHP behavior will not run on cached HTML hits
 
 ## Gzip Variant
 
