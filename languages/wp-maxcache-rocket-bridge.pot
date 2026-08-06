@@ -1,5 +1,5 @@
 # SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# Copyright (C) YEAR the package authors
 # This file is distributed under the same license as the WP Rocket + MAxCache Bridge package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: WP Rocket + MAxCache Bridge 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-03-30 17:40+0200\n"
+"POT-Creation-Date: 2026-08-06 18:47+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,93 +17,319 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: includes/class-wmrb-quick-test-service.php:65
-msgid "last-modified present"
+#: includes/class-wmrb-admin-page.php:62 includes/class-wmrb-admin-page.php:63
+msgid "MAxCache Bridge"
 msgstr ""
 
-#: includes/class-wmrb-quick-test-service.php:67
-msgid "last-modified missing"
+#: includes/class-wmrb-admin-page.php:191
+msgid "WP Rocket + MAxCache Bridge"
 msgstr ""
 
-#: includes/class-wmrb-quick-test-service.php:72
-msgid "accept-ranges present"
-msgstr ""
-
-#: includes/class-wmrb-quick-test-service.php:74
-msgid "accept-ranges missing"
-msgstr ""
-
-#: includes/class-wmrb-quick-test-service.php:80
-msgid "gzip encoding present"
-msgstr ""
-
-#: includes/class-wmrb-quick-test-service.php:82
-msgid "gzip encoding missing"
-msgstr ""
-
-#: includes/class-wmrb-sync-manager.php:92
-msgid "Encara no hi ha cap bloc MaxCache."
-msgstr ""
-
-#: includes/class-wmrb-sync-manager.php:101
-msgid ".htaccess no és llegible; no es pot determinar qui governa MaxCache."
-msgstr ""
-
-#: includes/class-wmrb-sync-manager.php:116
+#: includes/class-wmrb-admin-page.php:192
 msgid ""
-"Hi ha més d’un bloc MaxCache actiu o el bloc WMRB conviu amb un altre bloc "
-"extern."
+"Diagnòstic de compatibilitat, snippet recomanat i verificació ràpida de "
+"capçaleres."
 msgstr ""
 
-#: includes/class-wmrb-sync-manager.php:125
-msgid "El bridge governa l’únic bloc MaxCache actiu."
+#: includes/class-wmrb-admin-page.php:194
+msgid "Estat de l'entorn"
 msgstr ""
 
-#: includes/class-wmrb-sync-manager.php:134
+#: includes/class-wmrb-admin-page.php:200
+msgid "Run checks"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:203
+msgid "Snippet recomanat"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:204
+msgid "Retention backups:"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:210
+msgid "Auto-sync WP Rocket:"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:210
+#: includes/class-wmrb-admin-page.php:214
+#: includes/class-wmrb-admin-page.php:218
+#: includes/class-wmrb-admin-page.php:225
+#: includes/class-wmrb-admin-page.php:229
+#: includes/class-wmrb-admin-page.php:274
+#: includes/class-wmrb-admin-page.php:367
+msgid "ON"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:210
+#: includes/class-wmrb-admin-page.php:214
+#: includes/class-wmrb-admin-page.php:218
+#: includes/class-wmrb-admin-page.php:225
+#: includes/class-wmrb-admin-page.php:274
+#: includes/class-wmrb-admin-page.php:367
+msgid "OFF"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:211
+msgid "Habilitar monitorització automàtica de canvis de WP Rocket"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:214
+msgid "Auto-apply .htaccess:"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:215
+msgid "Aplicar automàticament el bloc WMRB a .htaccess (amb backup)"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:218
+msgid "Serve bot/crawler cache:"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:220
+msgid "Permetre que bots i crawlers rebin HTML cachejat des de MaxCache."
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:221
 msgid ""
-"S’ha detectat un bloc MaxCache extern/manual; el bridge no és el propietari "
-"actual."
+"Desactivat per defecte. Activar-ho redueix PHP en webs pràcticament "
+"estàtiques, però els bots poden veure HTML obsolet fins a la propera purga "
+"de WP Rocket."
 msgstr ""
 
-#: includes/class-wmrb-sync-manager.php:142
-msgid "No hi ha cap bloc MaxCache gestionat pel bridge."
+#: includes/class-wmrb-admin-page.php:225
+msgid "Serve gzip variant:"
 msgstr ""
 
-#: includes/class-wmrb-sync-manager.php:232
-#: includes/class-wmrb-sync-manager.php:274
-msgid ".htaccess no accessible (read/write)."
-msgstr ""
-
-#: includes/class-wmrb-sync-manager.php:241
-#: includes/class-wmrb-sync-manager.php:283
-msgid "No s’ha pogut crear backup de .htaccess."
-msgstr ""
-
-#: includes/class-wmrb-sync-manager.php:253
-#: includes/class-wmrb-sync-manager.php:296
-msgid "No s’ha pogut escriure .htaccess."
-msgstr ""
-
-#: includes/class-wmrb-sync-manager.php:315
-msgid "No hi ha backup vàlid per rollback."
-msgstr ""
-
-#: includes/class-wmrb-sync-manager.php:324
-msgid "Rollback fallit: no es pot escriure .htaccess."
-msgstr ""
-
-#: includes/class-wmrb-sync-manager.php:396
+#: includes/class-wmrb-admin-page.php:226
 msgid ""
-"Hi ha un bloc MaxCache extern; el bridge no auto-aplica fins que es passi a "
-"mode gestionat."
+"Servir fitxer .gz directament des de MaxCachePath (només recomanat sense "
+"Cloudflare/proxy)"
 msgstr ""
 
-#: includes/class-wmrb-sync-manager.php:400
-msgid "Hi ha conflicte entre blocs MaxCache; resol-lo abans d’auto-aplicar."
+#: includes/class-wmrb-admin-page.php:229
+msgid "Serve WebP variant:"
 msgstr ""
 
-#: includes/class-wmrb-sync-manager.php:404
-msgid ".htaccess no és llegible; no es pot validar el mode gestionat."
+#: includes/class-wmrb-admin-page.php:229
+msgid "AUTO/OFF"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:230
+msgid ""
+"Forçar variant WebP al MaxCachePath. Si WP Rocket té cache_webp actiu, el "
+"bridge també la detecta automàticament."
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:233
+msgid "Guardar configuració"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:236
+msgid "Sincronització WP Rocket:"
+msgstr ""
+
+#. translators: 1: URI total, 2: URI synced, 3: UA total, 4: UA synced, 5: cookie total, 6: cookie synced
+#: includes/class-wmrb-admin-page.php:241
+#, php-format
+msgid ""
+"URI %1$d (%2$d sincronitzades), UA %3$d (%4$d sincronitzades), Cookies %5$d "
+"(%6$d sincronitzades)."
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:255
+msgid "Exclusions de WP Rocket descartades"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:256
+msgid ""
+"Aquests patrons no són expressions regulars usables i s’han deixat fora del "
+"snippet. Incloure’ls faria que Apache rebutgés la directiva o que "
+"s’exclogués tot el trànsit. Corregeix-los a WP Rocket:"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:272
+msgid "User cache WP Rocket:"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:276
+msgid "El bridge usarà MaxCacheLoggedHash + {USER_SUFFIX}."
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:276
+msgid ""
+"WP Rocket ha activat user cache però no hi ha secret_cache_key usable; es "
+"mantindran les exclusions de cookies."
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:280
+msgid "Mode de gestió MaxCache:"
+msgstr ""
+
+#. translators: 1: total maxcache blocks, 2: WMRB blocks
+#: includes/class-wmrb-admin-page.php:290
+#, php-format
+msgid "Blocs detectats: %1$d MaxCache totals, %2$d bloc(s) WMRB."
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:299
+msgid "Estat de sincronització:"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:303
+msgid "in_sync"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:305
+msgid "pending_apply"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:307
+msgid "applied_unverified"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:314
+msgid "últim canvi detectat:"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:317
+msgid "últim aplicat:"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:322
+msgid "Últim backup:"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:325
+msgid "Últim error:"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:331
+msgid "Apply snippet now"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:337
+msgid "Take over MaxCache management"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:339
+msgid ""
+"Aquesta acció crea backup de .htaccess, elimina els blocs MaxCache existents "
+"i deixa un únic bloc gestionat pel bridge."
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:344
+msgid "Rollback last backup"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:350
+msgid "Mark snippet as applied"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:355
+msgid "Copy snippet"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:359
+msgid "Download snippet.txt"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:363
+msgid "Resultat proves ràpides"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:366
+msgid "Purge observer (debug mode)"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:367
+msgid "Debug mode:"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:369
+msgid "No hi ha esdeveniments registrats."
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:373
+msgid "Time"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:373
+msgid "Hook"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:387
+msgid "Clear log"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:391
+msgid "Rollout / rollback ràpid"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:393
+msgid "Instal·la en staging i valida diagnòstic."
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:394
+msgid "Aplica snippet manualment al servidor i fes purga WP Rocket."
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:395
+msgid "Valida capçaleres a origen amb curl."
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:396
+msgid "Per rollback: restaura .htaccess backup i torna a purgar."
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:419
+msgid "Overall:"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:423
+msgid "Check"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:424
+msgid "Status"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:425
+msgid "Reason"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:426
+msgid "Action"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:448
+msgid "Encara no executat."
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:453
+msgid "URL:"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:454
+msgid "Scope:"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:454
+msgid "public URL"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:467
+msgid "Nota:"
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:467
+msgid ""
+"Aquesta prova usa la URL pública de WordPress i pot passar per Cloudflare o "
+"altres proxys; no substitueix una validació directa contra l’origen."
+msgstr ""
+
+#: includes/class-wmrb-admin-page.php:472
+msgid "Permisos insuficients."
 msgstr ""
 
 #: includes/class-wmrb-diagnostics-service.php:55
@@ -178,301 +404,155 @@ msgstr ""
 msgid "Hi ha fitxers cachejats a WP Rocket."
 msgstr ""
 
-#: includes/class-wmrb-admin-page.php:65 includes/class-wmrb-admin-page.php:66
-msgid "MAxCache Bridge"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:225
-msgid "WP Rocket + MAxCache Bridge"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:226
-msgid ""
-"Diagnòstic de compatibilitat, snippet recomanat i verificació ràpida de "
-"capçaleres."
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:228
-msgid "Estat de l'entorn"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:234
-msgid "Run checks"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:237
-msgid "Snippet recomanat"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:239
-msgid "Auto-sync WP Rocket:"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:240
-#: includes/class-wmrb-admin-page.php:253
-#: includes/class-wmrb-admin-page.php:267
-#: includes/class-wmrb-admin-page.php:280
-#: includes/class-wmrb-admin-page.php:315
-#: includes/class-wmrb-admin-page.php:405
-msgid "ON"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:240
-#: includes/class-wmrb-admin-page.php:253
-#: includes/class-wmrb-admin-page.php:267
-#: includes/class-wmrb-admin-page.php:315
-#: includes/class-wmrb-admin-page.php:405
-msgid "OFF"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:247
-msgid "Habilitar monitorització automàtica de canvis de WP Rocket"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:249
-msgid "Guardar auto-sync"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:252
-msgid "Auto-apply .htaccess:"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:255
-msgid "Retention backups:"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:261
-msgid "Aplicar automàticament el bloc WMRB a .htaccess (amb backup)"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:263
-msgid "Guardar auto-apply"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:266
-msgid "Serve gzip variant:"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:274
-msgid ""
-"Servir fitxer .gz directament des de MaxCachePath (només recomanat sense "
-"Cloudflare/proxy)"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:276
-msgid "Guardar gzip variant"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:279
-msgid "Serve WebP variant:"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:280
-msgid "AUTO/OFF"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:287
-msgid ""
-"Forçar variant WebP al MaxCachePath. Si WP Rocket té cache_webp actiu, el "
-"bridge també la detecta automàticament."
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:289
-msgid "Guardar WebP variant"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:292
-msgid "Sincronització WP Rocket:"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:297
-#, php-format
-msgid ""
-"URI %1$d (%2$d sincronitzades), UA %3$d (%4$d sincronitzades), Cookies %5$d "
-"(%6$d sincronitzades)."
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:313
-msgid "User cache WP Rocket:"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:317
-msgid "El bridge usarà MaxCacheLoggedHash + {USER_SUFFIX}."
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:317
-msgid ""
-"WP Rocket ha activat user cache però no hi ha secret_cache_key usable; es "
-"mantindran les exclusions de cookies."
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:321
-msgid "Mode de gestió MaxCache:"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:331
-#, php-format
-msgid "Blocs detectats: %1$d MaxCache totals, %2$d bloc(s) WMRB."
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:340
-msgid "Estat de sincronització:"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:344
-msgid "in_sync"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:346
-msgid "pending_apply"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:352
-msgid "últim canvi detectat:"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:355
-msgid "últim aplicat:"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:360
-msgid "Últim backup:"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:363
-msgid "Últim error:"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:369
-msgid "Apply snippet now"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:375
-msgid "Take over MaxCache management"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:377
-msgid ""
-"Aquesta acció crea backup de .htaccess, elimina els blocs MaxCache existents "
-"i deixa un únic bloc gestionat pel bridge."
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:382
-msgid "Rollback last backup"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:388
-msgid "Mark snippet as applied"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:393
-msgid "Copy snippet"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:397
-msgid "Download snippet.txt"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:401
-msgid "Resultat proves ràpides"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:404
-msgid "Purge observer (debug mode)"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:405
-msgid "Debug mode:"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:407
-msgid "No hi ha esdeveniments registrats."
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:411
-msgid "Time"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:411
-msgid "Hook"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:425
-msgid "Clear log"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:429
-msgid "Rollout / rollback ràpid"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:431
-msgid "Instal·la en staging i valida diagnòstic."
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:432
-msgid "Aplica snippet manualment al servidor i fes purga WP Rocket."
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:433
-msgid "Valida capçaleres a origen amb curl."
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:434
-msgid "Per rollback: restaura .htaccess backup i torna a purgar."
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:457
-msgid "Overall:"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:461
-msgid "Check"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:462
-msgid "Status"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:463
-msgid "Reason"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:464
-msgid "Action"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:486
-msgid "Encara no executat."
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:491
-msgid "URL:"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:492
-msgid "Scope:"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:492
-msgid "public URL"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:505
-msgid "Nota:"
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:505
-msgid ""
-"Aquesta prova usa la URL pública de WordPress i pot passar per Cloudflare o "
-"altres proxys; no substitueix una validació directa contra l’origen."
-msgstr ""
-
-#: includes/class-wmrb-admin-page.php:510
-msgid "Permisos insuficients."
-msgstr ""
-
-#: includes/class-wmrb-github-updater.php:77
+#: includes/class-wmrb-github-updater.php:79
 msgid ""
 "Bridge between WP Rocket and mod_maxcache with diagnostics, sync, and safe "
 "auto-apply."
+msgstr ""
+
+#: includes/class-wmrb-quick-test-service.php:65
+msgid "last-modified present"
+msgstr ""
+
+#: includes/class-wmrb-quick-test-service.php:67
+msgid "last-modified missing"
+msgstr ""
+
+#: includes/class-wmrb-quick-test-service.php:72
+msgid "accept-ranges present"
+msgstr ""
+
+#: includes/class-wmrb-quick-test-service.php:74
+msgid "accept-ranges missing"
+msgstr ""
+
+#: includes/class-wmrb-quick-test-service.php:80
+msgid "gzip encoding present"
+msgstr ""
+
+#: includes/class-wmrb-quick-test-service.php:82
+msgid "gzip encoding missing"
+msgstr ""
+
+#: includes/class-wmrb-sync-manager.php:143
+msgid "Encara no hi ha cap bloc MaxCache."
+msgstr ""
+
+#: includes/class-wmrb-sync-manager.php:152
+msgid ".htaccess no és llegible; no es pot determinar qui governa MaxCache."
+msgstr ""
+
+#: includes/class-wmrb-sync-manager.php:167
+msgid ""
+"Hi ha més d’un bloc MaxCache actiu o el bloc WMRB conviu amb un altre bloc "
+"extern."
+msgstr ""
+
+#: includes/class-wmrb-sync-manager.php:176
+msgid "El bridge governa l’únic bloc MaxCache actiu."
+msgstr ""
+
+#: includes/class-wmrb-sync-manager.php:185
+msgid ""
+"S’ha detectat un bloc MaxCache extern/manual; el bridge no és el propietari "
+"actual."
+msgstr ""
+
+#: includes/class-wmrb-sync-manager.php:193
+msgid "No hi ha cap bloc MaxCache gestionat pel bridge."
+msgstr ""
+
+#: includes/class-wmrb-sync-manager.php:347
+msgid ".htaccess no accessible (read/write)."
+msgstr ""
+
+#: includes/class-wmrb-sync-manager.php:353
+msgid ""
+"El directori arrel no és escrivible: no es pot escriure .htaccess de forma "
+"atòmica i el bridge no farà una escriptura insegura."
+msgstr ""
+
+#: includes/class-wmrb-sync-manager.php:358
+#: includes/class-wmrb-sync-manager.php:600
+msgid ""
+"Ja hi ha una operació del bridge en curs; torna-ho a provar en uns segons."
+msgstr ""
+
+#: includes/class-wmrb-sync-manager.php:370
+msgid ""
+"No s’ha pogut analitzar .htaccess amb prou seguretat: hi ha una secció "
+"<IfModule> sense tancar o sintaxi ambigua. Corregeix-la manualment abans de "
+"fer el takeover."
+msgstr ""
+
+#: includes/class-wmrb-sync-manager.php:383
+msgid "No s’ha pogut crear backup de .htaccess."
+msgstr ""
+
+#: includes/class-wmrb-sync-manager.php:395
+msgid ""
+".htaccess ha canviat mentre s’aplicava el snippet; no s’ha escrit res. Torna-"
+"ho a provar."
+msgstr ""
+
+#: includes/class-wmrb-sync-manager.php:399
+msgid "No s’ha pogut escriure .htaccess de forma atòmica i segura."
+msgstr ""
+
+#: includes/class-wmrb-sync-manager.php:458
+msgid ""
+"Snippet aplicat, però la sonda prèvia no ha establert una referència fiable. "
+"Comprova manualment que el web respon."
+msgstr ""
+
+#: includes/class-wmrb-sync-manager.php:469
+msgid ""
+"El web respon, però .htaccess ha canviat després de l’escriptura del bridge; "
+"el snippet ja no es pot considerar aplicat. Torna-ho a provar."
+msgstr ""
+
+#: includes/class-wmrb-sync-manager.php:482
+msgid ""
+"Snippet aplicat, però no s’ha pogut verificar que el web respon. Comprova-ho "
+"manualment."
+msgstr ""
+
+#: includes/class-wmrb-sync-manager.php:493
+msgid ""
+"El web no respon, però .htaccess ha canviat després de l’escriptura del "
+"bridge; no s’ha fet cap rollback automàtic. Revisa-ho manualment."
+msgstr ""
+
+#: includes/class-wmrb-sync-manager.php:500
+msgid ""
+"El web ha deixat de respondre després d’aplicar el snippet; s’ha "
+"restaurat .htaccess automàticament."
+msgstr ""
+
+#: includes/class-wmrb-sync-manager.php:506
+msgid ""
+"CRÍTIC: el web no respon i no s’ha pogut restaurar .htaccess. Restaura el "
+"backup manualment."
+msgstr ""
+
+#: includes/class-wmrb-sync-manager.php:590
+msgid "No hi ha backup vàlid per rollback."
+msgstr ""
+
+#: includes/class-wmrb-sync-manager.php:609
+msgid "Rollback fallit: no es pot escriure .htaccess de forma atòmica."
+msgstr ""
+
+#: includes/class-wmrb-sync-manager.php:897
+msgid ""
+"Hi ha un bloc MaxCache extern; el bridge no auto-aplica fins que es passi a "
+"mode gestionat."
+msgstr ""
+
+#: includes/class-wmrb-sync-manager.php:901
+msgid "Hi ha conflicte entre blocs MaxCache; resol-lo abans d’auto-aplicar."
+msgstr ""
+
+#: includes/class-wmrb-sync-manager.php:905
+msgid ".htaccess no és llegible; no es pot validar el mode gestionat."
 msgstr ""

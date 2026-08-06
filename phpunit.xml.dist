@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+		 bootstrap="tests/bootstrap.php"
+		 cacheDirectory=".phpunit.cache"
+		 colors="true"
+		 failOnWarning="true"
+		 failOnNotice="true">
+	<testsuites>
+		<testsuite name="wmrb">
+			<directory>tests</directory>
+		</testsuite>
+	</testsuites>
+	<!--
+		"batch2" holds executable specifications for work that is planned but
+		not implemented yet. Those tests are expected to fail; run the group on
+		purpose (see README) to see what is still outstanding.
+	-->
+	<groups>
+		<exclude>
+			<group>batch2</group>
+		</exclude>
+	</groups>
+	<source>
+		<include>
+			<directory suffix=".php">includes</directory>
+		</include>
+	</source>
+</phpunit>

@@ -51,11 +51,7 @@ class WMRB_Admin_Page {
 		add_action( 'admin_post_wmrb_download_snippet', array( $this, 'handle_download_snippet' ) );
 		add_action( 'admin_post_wmrb_clear_log', array( $this, 'handle_clear_log' ) );
 		add_action( 'admin_post_wmrb_mark_applied', array( $this, 'handle_mark_applied' ) );
-		add_action( 'admin_post_wmrb_toggle_auto_sync', array( $this, 'handle_toggle_auto_sync' ) );
-		add_action( 'admin_post_wmrb_toggle_auto_apply', array( $this, 'handle_toggle_auto_apply' ) );
-		add_action( 'admin_post_wmrb_toggle_bot_user_agents', array( $this, 'handle_toggle_bot_user_agents' ) );
-		add_action( 'admin_post_wmrb_toggle_gzip_variant', array( $this, 'handle_toggle_gzip_variant' ) );
-		add_action( 'admin_post_wmrb_toggle_webp_variant', array( $this, 'handle_toggle_webp_variant' ) );
+		add_action( 'admin_post_wmrb_save_settings', array( $this, 'handle_save_settings' ) );
 		add_action( 'admin_post_wmrb_apply_now', array( $this, 'handle_apply_now' ) );
 		add_action( 'admin_post_wmrb_take_over_management', array( $this, 'handle_take_over_management' ) );
 		add_action( 'admin_post_wmrb_rollback', array( $this, 'handle_rollback' ) );
@@ -112,54 +108,39 @@ class WMRB_Admin_Page {
 		exit;
 	}
 
-	public function handle_toggle_auto_sync() {
-		$this->assert_permissions_and_nonce( 'wmrb_toggle_auto_sync' );
-
-		$enabled               = isset( $_POST['auto_sync_enabled'] ) && '1' === (string) $_POST['auto_sync_enabled'];
-		$this->options['auto_sync_enabled'] = $enabled;
+	public function handle_save_settings() {
+		$this->assert_permissions_and_nonce( 'wmrb_save_settings' );
 
 		$current = get_option( WMRB_Plugin::OPTION_KEY, array() );
 		$current = is_array( $current ) ? $current : array();
-		$current['auto_sync_enabled'] = $enabled;
-		update_option( WMRB_Plugin::OPTION_KEY, $current );
+		$before  = wp_parse_args( $current, WMRB_Plugin::default_options() );
 
-		if ( $enabled ) {
-			$this->sync_manager->refresh_state_from_current_fingerprint();
+		$settings = array(
+			'auto_sync_enabled',
+			'auto_apply_htaccess',
+			'serve_bot_user_agents',
+			'serve_gzip_variant',
+			'serve_webp_variant',
+		);
+
+		foreach ( $settings as $setting ) {
+			$current[ $setting ] = isset( $_POST[ $setting ] ) && '1' === (string) $_POST[ $setting ];
 		}
 
-		wp_safe_redirect( admin_url( 'tools.php?page=wmrb-bridge&wmrb=sync-updated' ) );
-		exit;
-	}
-
-	public function handle_toggle_auto_apply() {
-		$this->assert_permissions_and_nonce( 'wmrb_toggle_auto_apply' );
-
-		$enabled = isset( $_POST['auto_apply_htaccess'] ) && '1' === (string) $_POST['auto_apply_htaccess'];
-		$this->options['auto_apply_htaccess'] = $enabled;
-
-		$current = get_option( WMRB_Plugin::OPTION_KEY, array() );
-		$current = is_array( $current ) ? $current : array();
-		$current['auto_apply_htaccess'] = $enabled;
 		update_option( WMRB_Plugin::OPTION_KEY, $current );
+		$this->options = wp_parse_args( $current, WMRB_Plugin::default_options() );
 
-		wp_safe_redirect( admin_url( 'tools.php?page=wmrb-bridge&wmrb=auto-apply-updated' ) );
-		exit;
-	}
+		$snippet_settings = array( 'serve_bot_user_agents', 'serve_gzip_variant', 'serve_webp_variant' );
+		$needs_refresh    = ! $before['auto_sync_enabled'] && $this->options['auto_sync_enabled'];
+		foreach ( $snippet_settings as $setting ) {
+			$needs_refresh = $needs_refresh || $before[ $setting ] !== $this->options[ $setting ];
+		}
 
-	public function handle_toggle_bot_user_agents() {
-		$this->assert_permissions_and_nonce( 'wmrb_toggle_bot_user_agents' );
+		if ( $needs_refresh ) {
+			$this->sync_manager->refresh_state_for_options( $this->options );
+		}
 
-		$enabled = isset( $_POST['serve_bot_user_agents'] ) && '1' === (string) $_POST['serve_bot_user_agents'];
-		$this->options['serve_bot_user_agents'] = $enabled;
-
-		$current = get_option( WMRB_Plugin::OPTION_KEY, array() );
-		$current = is_array( $current ) ? $current : array();
-		$current['serve_bot_user_agents'] = $enabled;
-		update_option( WMRB_Plugin::OPTION_KEY, $current );
-
-		$this->sync_manager->refresh_state_from_current_fingerprint();
-		wp_safe_redirect( admin_url( 'tools.php?page=wmrb-bridge&wmrb=bot-ua-updated' ) );
-		exit;
+		wp_safe_redirect( admin_url( 'tools.php?page=wmrb-bridge&wmrb=settings-updated' ) );
 	}
 
 	public function handle_apply_now() {
@@ -173,38 +154,6 @@ class WMRB_Admin_Page {
 		$this->assert_permissions_and_nonce( 'wmrb_take_over_management' );
 		$this->sync_manager->take_over_htaccess_management();
 		wp_safe_redirect( admin_url( 'tools.php?page=wmrb-bridge&wmrb=takeover-done' ) );
-		exit;
-	}
-
-	public function handle_toggle_gzip_variant() {
-		$this->assert_permissions_and_nonce( 'wmrb_toggle_gzip_variant' );
-
-		$enabled = isset( $_POST['serve_gzip_variant'] ) && '1' === (string) $_POST['serve_gzip_variant'];
-		$this->options['serve_gzip_variant'] = $enabled;
-
-		$current = get_option( WMRB_Plugin::OPTION_KEY, array() );
-		$current = is_array( $current ) ? $current : array();
-		$current['serve_gzip_variant'] = $enabled;
-		update_option( WMRB_Plugin::OPTION_KEY, $current );
-
-		$this->sync_manager->refresh_state_from_current_fingerprint();
-		wp_safe_redirect( admin_url( 'tools.php?page=wmrb-bridge&wmrb=gzip-updated' ) );
-		exit;
-	}
-
-	public function handle_toggle_webp_variant() {
-		$this->assert_permissions_and_nonce( 'wmrb_toggle_webp_variant' );
-
-		$enabled = isset( $_POST['serve_webp_variant'] ) && '1' === (string) $_POST['serve_webp_variant'];
-		$this->options['serve_webp_variant'] = $enabled;
-
-		$current = get_option( WMRB_Plugin::OPTION_KEY, array() );
-		$current = is_array( $current ) ? $current : array();
-		$current['serve_webp_variant'] = $enabled;
-		update_option( WMRB_Plugin::OPTION_KEY, $current );
-
-		$this->sync_manager->refresh_state_from_current_fingerprint();
-		wp_safe_redirect( admin_url( 'tools.php?page=wmrb-bridge&wmrb=webp-updated' ) );
 		exit;
 	}
 
@@ -252,72 +201,36 @@ class WMRB_Admin_Page {
 			</form>
 
 			<h2><?php echo esc_html__( 'Snippet recomanat', 'wp-maxcache-rocket-bridge' ); ?></h2>
-			<p>
-				<?php echo esc_html__( 'Auto-sync WP Rocket:', 'wp-maxcache-rocket-bridge' ); ?>
-				<strong><?php echo ! empty( $this->options['auto_sync_enabled'] ) ? esc_html__( 'ON', 'wp-maxcache-rocket-bridge' ) : esc_html__( 'OFF', 'wp-maxcache-rocket-bridge' ); ?></strong>
-			</p>
-			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin-bottom:8px;">
-				<?php wp_nonce_field( 'wmrb_toggle_auto_sync' ); ?>
-				<input type="hidden" name="action" value="wmrb_toggle_auto_sync" />
-				<label>
-					<input type="checkbox" name="auto_sync_enabled" value="1" <?php checked( ! empty( $this->options['auto_sync_enabled'] ) ); ?> />
-					<?php echo esc_html__( 'Habilitar monitorització automàtica de canvis de WP Rocket', 'wp-maxcache-rocket-bridge' ); ?>
-				</label>
-				<?php submit_button( __( 'Guardar auto-sync', 'wp-maxcache-rocket-bridge' ), 'secondary', 'submit', false ); ?>
-			</form>
-			<p>
-				<?php echo esc_html__( 'Auto-apply .htaccess:', 'wp-maxcache-rocket-bridge' ); ?>
-				<strong><?php echo ! empty( $this->options['auto_apply_htaccess'] ) ? esc_html__( 'ON', 'wp-maxcache-rocket-bridge' ) : esc_html__( 'OFF', 'wp-maxcache-rocket-bridge' ); ?></strong>
-			</p>
 			<p><?php echo esc_html__( 'Retention backups:', 'wp-maxcache-rocket-bridge' ); ?> <strong>5</strong></p>
-			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin-bottom:8px;">
-				<?php wp_nonce_field( 'wmrb_toggle_auto_apply' ); ?>
-				<input type="hidden" name="action" value="wmrb_toggle_auto_apply" />
-				<label>
-					<input type="checkbox" name="auto_apply_htaccess" value="1" <?php checked( ! empty( $this->options['auto_apply_htaccess'] ) ); ?> />
-					<?php echo esc_html__( 'Aplicar automàticament el bloc WMRB a .htaccess (amb backup)', 'wp-maxcache-rocket-bridge' ); ?>
-				</label>
-				<?php submit_button( __( 'Guardar auto-apply', 'wp-maxcache-rocket-bridge' ), 'secondary', 'submit', false ); ?>
-			</form>
-			<p>
-				<?php echo esc_html__( 'Serve bot/crawler cache:', 'wp-maxcache-rocket-bridge' ); ?>
-				<strong><?php echo ! empty( $this->options['serve_bot_user_agents'] ) ? esc_html__( 'ON', 'wp-maxcache-rocket-bridge' ) : esc_html__( 'OFF', 'wp-maxcache-rocket-bridge' ); ?></strong>
-			</p>
-			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin-bottom:8px;">
-				<?php wp_nonce_field( 'wmrb_toggle_bot_user_agents' ); ?>
-				<input type="hidden" name="action" value="wmrb_toggle_bot_user_agents" />
-				<label>
-					<input type="checkbox" name="serve_bot_user_agents" value="1" <?php checked( ! empty( $this->options['serve_bot_user_agents'] ) ); ?> />
-					<?php echo esc_html__( 'Permetre que bots i crawlers rebin HTML cachejat des de MaxCache.', 'wp-maxcache-rocket-bridge' ); ?>
-				</label>
-				<p class="description"><?php echo esc_html__( 'Desactivat per defecte. Activar-ho redueix PHP en webs pràcticament estàtiques, però els bots poden veure HTML obsolet fins a la propera purga de WP Rocket.', 'wp-maxcache-rocket-bridge' ); ?></p>
-				<?php submit_button( __( 'Guardar bot/crawler cache', 'wp-maxcache-rocket-bridge' ), 'secondary', 'submit', false ); ?>
-			</form>
-			<p>
-				<?php echo esc_html__( 'Serve gzip variant:', 'wp-maxcache-rocket-bridge' ); ?>
-				<strong><?php echo ! empty( $this->options['serve_gzip_variant'] ) ? esc_html__( 'ON', 'wp-maxcache-rocket-bridge' ) : esc_html__( 'OFF', 'wp-maxcache-rocket-bridge' ); ?></strong>
-			</p>
-			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin-bottom:8px;">
-				<?php wp_nonce_field( 'wmrb_toggle_gzip_variant' ); ?>
-				<input type="hidden" name="action" value="wmrb_toggle_gzip_variant" />
-				<label>
-					<input type="checkbox" name="serve_gzip_variant" value="1" <?php checked( ! empty( $this->options['serve_gzip_variant'] ) ); ?> />
-					<?php echo esc_html__( 'Servir fitxer .gz directament des de MaxCachePath (només recomanat sense Cloudflare/proxy)', 'wp-maxcache-rocket-bridge' ); ?>
-				</label>
-				<?php submit_button( __( 'Guardar gzip variant', 'wp-maxcache-rocket-bridge' ), 'secondary', 'submit', false ); ?>
-			</form>
-			<p>
-				<?php echo esc_html__( 'Serve WebP variant:', 'wp-maxcache-rocket-bridge' ); ?>
-				<strong><?php echo ! empty( $this->options['serve_webp_variant'] ) ? esc_html__( 'ON', 'wp-maxcache-rocket-bridge' ) : esc_html__( 'AUTO/OFF', 'wp-maxcache-rocket-bridge' ); ?></strong>
-			</p>
-			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin-bottom:8px;">
-				<?php wp_nonce_field( 'wmrb_toggle_webp_variant' ); ?>
-				<input type="hidden" name="action" value="wmrb_toggle_webp_variant" />
-				<label>
-					<input type="checkbox" name="serve_webp_variant" value="1" <?php checked( ! empty( $this->options['serve_webp_variant'] ) ); ?> />
-					<?php echo esc_html__( 'Forçar variant WebP al MaxCachePath. Si WP Rocket té cache_webp actiu, el bridge també la detecta automàticament.', 'wp-maxcache-rocket-bridge' ); ?>
-				</label>
-				<?php submit_button( __( 'Guardar WebP variant', 'wp-maxcache-rocket-bridge' ), 'secondary', 'submit', false ); ?>
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+				<?php wp_nonce_field( 'wmrb_save_settings' ); ?>
+				<input type="hidden" name="action" value="wmrb_save_settings" />
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row"><?php echo esc_html__( 'Auto-sync WP Rocket:', 'wp-maxcache-rocket-bridge' ); ?> <strong><?php echo ! empty( $this->options['auto_sync_enabled'] ) ? esc_html__( 'ON', 'wp-maxcache-rocket-bridge' ) : esc_html__( 'OFF', 'wp-maxcache-rocket-bridge' ); ?></strong></th>
+						<td><label><input type="checkbox" name="auto_sync_enabled" value="1" <?php checked( ! empty( $this->options['auto_sync_enabled'] ) ); ?> /> <?php echo esc_html__( 'Habilitar monitorització automàtica de canvis de WP Rocket', 'wp-maxcache-rocket-bridge' ); ?></label></td>
+					</tr>
+					<tr>
+						<th scope="row"><?php echo esc_html__( 'Auto-apply .htaccess:', 'wp-maxcache-rocket-bridge' ); ?> <strong><?php echo ! empty( $this->options['auto_apply_htaccess'] ) ? esc_html__( 'ON', 'wp-maxcache-rocket-bridge' ) : esc_html__( 'OFF', 'wp-maxcache-rocket-bridge' ); ?></strong></th>
+						<td><label><input type="checkbox" name="auto_apply_htaccess" value="1" <?php checked( ! empty( $this->options['auto_apply_htaccess'] ) ); ?> /> <?php echo esc_html__( 'Aplicar automàticament el bloc WMRB a .htaccess (amb backup)', 'wp-maxcache-rocket-bridge' ); ?></label></td>
+					</tr>
+					<tr>
+						<th scope="row"><?php echo esc_html__( 'Serve bot/crawler cache:', 'wp-maxcache-rocket-bridge' ); ?> <strong><?php echo ! empty( $this->options['serve_bot_user_agents'] ) ? esc_html__( 'ON', 'wp-maxcache-rocket-bridge' ) : esc_html__( 'OFF', 'wp-maxcache-rocket-bridge' ); ?></strong></th>
+						<td>
+							<label><input type="checkbox" name="serve_bot_user_agents" value="1" <?php checked( ! empty( $this->options['serve_bot_user_agents'] ) ); ?> /> <?php echo esc_html__( 'Permetre que bots i crawlers rebin HTML cachejat des de MaxCache.', 'wp-maxcache-rocket-bridge' ); ?></label>
+							<p class="description"><?php echo esc_html__( 'Desactivat per defecte. Activar-ho redueix PHP en webs pràcticament estàtiques, però els bots poden veure HTML obsolet fins a la propera purga de WP Rocket.', 'wp-maxcache-rocket-bridge' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><?php echo esc_html__( 'Serve gzip variant:', 'wp-maxcache-rocket-bridge' ); ?> <strong><?php echo ! empty( $this->options['serve_gzip_variant'] ) ? esc_html__( 'ON', 'wp-maxcache-rocket-bridge' ) : esc_html__( 'OFF', 'wp-maxcache-rocket-bridge' ); ?></strong></th>
+						<td><label><input type="checkbox" name="serve_gzip_variant" value="1" <?php checked( ! empty( $this->options['serve_gzip_variant'] ) ); ?> /> <?php echo esc_html__( 'Servir fitxer .gz directament des de MaxCachePath (només recomanat sense Cloudflare/proxy)', 'wp-maxcache-rocket-bridge' ); ?></label></td>
+					</tr>
+					<tr>
+						<th scope="row"><?php echo esc_html__( 'Serve WebP variant:', 'wp-maxcache-rocket-bridge' ); ?> <strong><?php echo ! empty( $this->options['serve_webp_variant'] ) ? esc_html__( 'ON', 'wp-maxcache-rocket-bridge' ) : esc_html__( 'AUTO/OFF', 'wp-maxcache-rocket-bridge' ); ?></strong></th>
+						<td><label><input type="checkbox" name="serve_webp_variant" value="1" <?php checked( ! empty( $this->options['serve_webp_variant'] ) ); ?> /> <?php echo esc_html__( 'Forçar variant WebP al MaxCachePath. Si WP Rocket té cache_webp actiu, el bridge també la detecta automàticament.', 'wp-maxcache-rocket-bridge' ); ?></label></td>
+					</tr>
+				</table>
+				<?php submit_button( __( 'Guardar configuració', 'wp-maxcache-rocket-bridge' ), 'secondary', 'submit', false ); ?>
 			</form>
 			<p>
 				<?php echo esc_html__( 'Sincronització WP Rocket:', 'wp-maxcache-rocket-bridge' ); ?>
@@ -336,6 +249,21 @@ class WMRB_Admin_Page {
 				);
 				?>
 			</p>
+			<?php $rejected = $this->snippet_service->get_rejected_patterns(); ?>
+			<?php if ( ! empty( $rejected ) ) : ?>
+				<div class="notice notice-warning inline">
+					<p><strong><?php echo esc_html__( 'Exclusions de WP Rocket descartades', 'wp-maxcache-rocket-bridge' ); ?></strong></p>
+					<p><?php echo esc_html__( 'Aquests patrons no són expressions regulars usables i s’han deixat fora del snippet. Incloure’ls faria que Apache rebutgés la directiva o que s’exclogués tot el trànsit. Corregeix-los a WP Rocket:', 'wp-maxcache-rocket-bridge' ); ?></p>
+					<ul style="list-style:disc;margin-left:20px;">
+						<?php foreach ( $rejected as $item ) : ?>
+							<li>
+								<code><?php echo esc_html( (string) $item['setting'] ); ?></code>:
+								<code><?php echo esc_html( (string) $item['pattern'] ); ?></code>
+							</li>
+						<?php endforeach; ?>
+					</ul>
+				</div>
+			<?php endif; ?>
 			<p>
 				<?php
 				$wp_rocket_settings      = get_option( 'wp_rocket_settings', array() );
@@ -375,7 +303,10 @@ class WMRB_Admin_Page {
 					? __( 'in_sync', 'wp-maxcache-rocket-bridge' )
 					: ( 'pending_apply' === $sync_status
 						? __( 'pending_apply', 'wp-maxcache-rocket-bridge' )
-						: $sync_status
+						: ( 'applied_unverified' === $sync_status
+							? __( 'applied_unverified', 'wp-maxcache-rocket-bridge' )
+							: $sync_status
+						)
 					);
 				?>
 				<strong><?php echo esc_html( $sync_label ); ?></strong>

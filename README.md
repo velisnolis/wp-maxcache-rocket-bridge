@@ -25,6 +25,8 @@ This plugin does not try to replace `WP Rocket` or `AccelerateWP`. Its purpose i
   - `conflict`
 - Can take over an existing external `MaxCache` configuration and move the site to `managed mode`
 - Keeps `.htaccess` backups and exposes rollback
+- Verifies the site still answers after every write, and reverts automatically if it does not
+- Validates every exclusion coming from `WP Rocket` and drops the ones that would break the config
 - Watches `wp_rocket_settings` and can auto-apply the managed block when the bridge owns it
 - Can serve static HTML to generic bots/crawlers for mostly static or archive sites, off by default
 - Adapts `MaxCachePath` automatically for:
@@ -140,7 +142,7 @@ The UI shows the detected ownership state of `.htaccess`:
 - `external`: a non-WMRB `MaxCache` block exists
 - `conflict`: more than one active `MaxCache` block exists
 
-`auto_apply` only runs in `managed` or `unmanaged`.
+`auto_apply` only runs in `managed` or `unmanaged`. A write to `wp_rocket_settings` triggers it only when the effective WMRB snippet fingerprint changes; unrelated WP Rocket metadata cannot apply older pending drift.
 
 ## Takeover
 
@@ -153,6 +155,10 @@ That action:
 3. writes a single WMRB-managed block
 4. moves the site to `managed` + `in_sync`
 
+Existing blocks are located by walking the file and tracking `<IfModule>` nesting depth, so a `MaxCache` section that wraps other sections is removed whole. Apache answers every request with a `500` when a closing tag is orphaned, and takeover by definition runs over configurations the bridge did not write.
+
+If the file cannot be parsed safely — an `<IfModule>` section that is never closed — the takeover refuses and reports it rather than rewriting a file it does not understand.
+
 ## Quick Test
 
 The built-in quick test uses the public WordPress URL.
@@ -162,6 +168,43 @@ That means:
 - it may pass through Cloudflare or other proxies
 - it is useful as a general signal
 - it does not replace direct origin validation with `curl --resolve`
+
+## Write Safety
+
+Because `auto_apply_htaccess` is on by default, a bad write happens without anyone watching. Three mechanisms guard that path.
+
+### Pattern validation
+
+Exclusions from `cache_reject_uri`, `cache_reject_ua`, and `cache_reject_cookies` are typed by hand in `WP Rocket` and end up verbatim inside a regex alternation in the generated directives. Fragments are accepted one at a time, and each must:
+
+- compile on its own, wrapped in a group
+- not behave as a universal match across representative inputs for its target directive
+- still compile once appended to everything accepted before it
+
+The third rule matters as much as the first. Two fragments can each be valid yet refuse to compile together — duplicate named groups being the obvious case — and Apache discards the whole directive when that happens, taking every other exclusion with it.
+
+A fragment failing any check is dropped and listed in the admin screen, so a typo never costs the site. The universal-match rule uses separate non-empty URI, user-agent, and cookie samples: for example, `^/` is universal for request URIs even though it is not universal for user-agent strings. It stops patterns like `.*`, `.+`, `.`, `^/` in URI exclusions, or `|/foo` from silently disabling the cache, while allowing anchored patterns such as `^$` that only target an empty value. The same pipeline feeds the sync summary, so the counts and the warnings can never disagree.
+
+### Atomic writes
+
+`.htaccess` is written to a temporary file in the same directory, given the original's mode and group, and renamed into place.
+
+There is deliberately **no in-place fallback**. `file_put_contents()` truncates before writing and its lock is only advisory, so Apache can read an empty or half-written `.htaccess` and answer `500` for every request. When an atomic rename is not possible — most often because the document root is not writable — the bridge refuses the operation and says so.
+
+Operations take an exclusive lock, and the file is re-read and compared immediately before the rename. Anything that changed it in the meantime, including WordPress rewriting it when permalinks are saved, wins: the bridge aborts rather than clobber it.
+
+### Post-write verification
+
+Around every write the bridge probes the site:
+
+1. before writing, to establish a baseline
+2. after writing, to confirm nothing broke
+
+Each probe mints a random token, stores it briefly, and requests the home page with that token in the query string. The response must contain the token echoed back. A status code alone proves little — a CDN can serve a cached page, or its own error page, while the origin is down — and a fresh token per request means no edge cache can answer it.
+
+A failing probe is retried a few times before it counts: a single `502` or `503` is routine on shared hosting and is not worth a rollback.
+
+If the site answered before the write and does not answer after it, `.htaccess` is restored and the error is recorded — but only if the file is still byte-for-byte what the bridge wrote. If the site was already failing beforehand, or the probe cannot run at all (loopback requests blocked), the bridge reports instead of rolling back, because it has no reliable baseline to judge against. That write is recorded as `applied_unverified`, not `in_sync`; the next state refresh probes again and promotes it to `in_sync` only after a verified response.
 
 ## Rollback
 
@@ -173,6 +216,35 @@ If a deployment fails:
 2. purge `WP Rocket`
 3. validate headers again at origin
 
+## Development
+
+```bash
+composer install
+composer test
+```
+
+The test suite runs without a WordPress install: `tests/wp-stubs.php` reimplements the small slice of the WordPress API the plugin touches, and the filesystem is sandboxed to a temporary directory. `vendor/`, `tests/`, and the Composer files are development-only and must not be shipped in the release zip.
+
+### Pending work as executable specifications
+
+Tests in the `batch2` group describe behaviour that is planned but not implemented, so they fail on purpose and are excluded from the default run:
+
+```bash
+vendor/bin/phpunit --group batch2
+```
+
+Each one cites the reference implementation it was derived from — AccelerateWP's `clsop/inc/functions/htaccess.php` and WP Rocket's `inc/functions/options.php`. They cover snippet fidelity (mobile options, dynamic and mandatory cookies, exclusions contributed through WP Rocket's filters) and lifecycle gaps (uninstall, sync state that never inspects `.htaccess`, redundant option writes).
+
+## Building a release
+
+```bash
+./build.sh
+```
+
+The archive is assembled from an allowlist rather than by excluding known-unwanted paths, so anything added to the repository later — more tests, more tooling — stays out by default instead of shipping by accident. The build then re-opens the archive and fails if a forbidden path slipped in anyway.
+
+Pushing a `vX.Y.Z` tag runs the same script in CI, which refuses to publish unless the tag matches the version in the plugin header, and attaches the archive to the GitHub release.
+
 ## Updates via GitHub
 
 The plugin checks GitHub Releases at:
@@ -182,8 +254,11 @@ The plugin checks GitHub Releases at:
 Expected release flow:
 
 1. tag `vX.Y.Z`
-2. create a GitHub release
-3. attach `wp-maxcache-rocket-bridge.zip`
+2. push the tag; CI builds and publishes the release with `wp-maxcache-rocket-bridge.zip` attached
+
+The updater requires that asset by name. There is no fallback to GitHub's generated source archive, which is the repository rather than the plugin: it unpacks under a version-suffixed directory and carries the test suite and build tooling. A release without the asset offers no update at all.
+
+Lookups are cached for an hour on success and fifteen minutes on failure, so an unreachable or rate-limited GitHub cannot add a blocking request to every update check the site performs.
 
 ## Disclaimer
 

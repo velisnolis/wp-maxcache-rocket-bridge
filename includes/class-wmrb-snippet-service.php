@@ -130,10 +130,20 @@ class WMRB_Snippet_Service {
 	private $options;
 
 	/**
-	 * @param array<string,mixed> $options
+	 * Explicit WP Rocket settings used for before/after comparisons. Null means
+	 * read the live option, preserving the normal runtime behaviour.
+	 *
+	 * @var array<string,mixed>|null
 	 */
-	public function __construct( array $options ) {
-		$this->options = $options;
+	private $rocket_settings_override;
+
+	/**
+	 * @param array<string,mixed> $options
+	 * @param array<string,mixed>|null $rocket_settings_override
+	 */
+	public function __construct( array $options, $rocket_settings_override = null ) {
+		$this->options                  = $options;
+		$this->rocket_settings_override = is_array( $rocket_settings_override ) ? $rocket_settings_override : null;
 	}
 
 	public function get_snippet() {
@@ -182,19 +192,17 @@ class WMRB_Snippet_Service {
 	 * @return array<string,int>
 	 */
 	public function get_sync_summary() {
-		$uri_rocket = array_values( array_unique( array_filter( array_map( array( $this, 'sanitize_uri_pattern' ), $this->get_wp_rocket_array_setting( 'cache_reject_uri' ) ) ) ) );
-		$ua_rocket = $this->get_effective_rocket_ua_exclusions();
-		$cookie_rocket = array_values( array_unique( array_filter( array_map( array( $this, 'sanitize_pipe_fragment' ), $this->get_wp_rocket_array_setting( 'cache_reject_cookies' ) ) ) ) );
-		$base_uas      = $this->get_base_ua_exclusions();
-		$base_cookies  = $this->get_base_cookie_exclusions();
+		$uri    = $this->resolve_uri_fragments();
+		$ua     = $this->resolve_ua_fragments();
+		$cookie = $this->resolve_cookie_fragments();
 
 		return array(
-			'uri_total'     => 1 + count( $uri_rocket ),
-			'ua_total'      => count( array_unique( array_merge( $base_uas, $ua_rocket ) ) ),
-			'cookie_total'  => count( array_unique( array_merge( $base_cookies, $cookie_rocket ) ) ),
-			'uri_synced'    => count( $uri_rocket ),
-			'ua_synced'     => count( $ua_rocket ),
-			'cookie_synced' => count( $cookie_rocket ),
+			'uri_total'     => 1 + count( $uri['accepted'] ),
+			'ua_total'      => count( $ua['accepted'] ),
+			'cookie_total'  => count( $cookie['accepted'] ),
+			'uri_synced'    => count( array_intersect( $uri['accepted'], $uri['from_rocket'] ) ),
+			'ua_synced'     => count( array_intersect( $ua['accepted'], $ua['from_rocket'] ) ),
+			'cookie_synced' => count( array_intersect( $cookie['accepted'], $cookie['from_rocket'] ) ),
 		);
 	}
 
@@ -243,31 +251,250 @@ class WMRB_Snippet_Service {
 	}
 
 	private function build_uri_exclusions() {
-		$rocket_exclusions = $this->get_wp_rocket_array_setting( 'cache_reject_uri' );
-		$rocket_exclusions = array_map( array( $this, 'sanitize_uri_pattern' ), $rocket_exclusions );
+		$accepted = $this->resolve_uri_fragments()['accepted'];
 
-		$values = array_values( array_unique( array_filter( $rocket_exclusions ) ) );
-
-		if ( empty( $values ) ) {
+		if ( empty( $accepted ) ) {
 			return self::BASE_URI_EXCLUSION;
 		}
 
-		return self::BASE_URI_EXCLUSION . '|' . implode( '|', $values );
+		return self::BASE_URI_EXCLUSION . '|' . implode( '|', $accepted );
 	}
 
 	private function build_ua_exclusions() {
-		$rocket_exclusions = $this->get_effective_rocket_ua_exclusions();
-
-		$values = array_values( array_unique( array_filter( array_merge( $this->get_base_ua_exclusions(), $rocket_exclusions ) ) ) );
-		return implode( '|', $values );
+		return implode( '|', $this->resolve_ua_fragments()['accepted'] );
 	}
 
 	private function build_cookie_exclusions() {
-		$rocket_exclusions = $this->get_wp_rocket_array_setting( 'cache_reject_cookies' );
-		$rocket_exclusions = array_map( array( $this, 'sanitize_pipe_fragment' ), $rocket_exclusions );
+		return '(' . implode( '|', $this->resolve_cookie_fragments()['accepted'] ) . ')';
+	}
 
-		$values = array_values( array_unique( array_filter( array_merge( $this->get_base_cookie_exclusions(), $rocket_exclusions ) ) ) );
-		return '(' . implode( '|', $values ) . ')';
+	/**
+	 * @return array{accepted: array<int,string>, rejected: array<int,string>, from_rocket: array<int,string>}
+	 */
+	private function resolve_uri_fragments() {
+		$from_rocket = $this->unique_sanitized( 'cache_reject_uri', 'sanitize_uri_pattern' );
+
+		return $this->partition_fragments( $from_rocket, $from_rocket, self::BASE_URI_EXCLUSION, '', '', $this->representative_uri_subjects() );
+	}
+
+	/**
+	 * @return array{accepted: array<int,string>, rejected: array<int,string>, from_rocket: array<int,string>}
+	 */
+	private function resolve_ua_fragments() {
+		$from_rocket = $this->get_effective_rocket_ua_exclusions();
+		$candidates  = array_values( array_unique( array_merge( $this->get_base_ua_exclusions(), $from_rocket ) ) );
+
+		return $this->partition_fragments( $candidates, $from_rocket, '', '', '', $this->representative_ua_subjects() );
+	}
+
+	/**
+	 * @return array{accepted: array<int,string>, rejected: array<int,string>, from_rocket: array<int,string>}
+	 */
+	private function resolve_cookie_fragments() {
+		$from_rocket = $this->unique_sanitized( 'cache_reject_cookies', 'sanitize_pipe_fragment' );
+		$candidates  = array_values( array_unique( array_merge( $this->get_base_cookie_exclusions(), $from_rocket ) ) );
+
+		return $this->partition_fragments( $candidates, $from_rocket, '', '(', ')', $this->representative_cookie_subjects() );
+	}
+
+	/**
+	 * @return array<int,string>
+	 */
+	private function unique_sanitized( $setting, $sanitizer ) {
+		$values = array_map( array( $this, $sanitizer ), $this->get_wp_rocket_array_setting( $setting ) );
+
+		return array_values( array_unique( array_filter( $values, static function ( $value ) {
+			return '' !== $value;
+		} ) ) );
+	}
+
+	/**
+	 * Accepts fragments one at a time, re-checking the whole alternation after
+	 * each addition.
+	 *
+	 * Validating fragments in isolation is not enough: two patterns can each be
+	 * valid yet refuse to compile together — duplicate named groups being the
+	 * obvious case — and Apache discards the entire directive when that happens,
+	 * silently dropping every exclusion with it.
+	 *
+	 * @param array<int,string> $candidates  Fragments to consider, in order.
+	 * @param array<int,string> $from_rocket Which of them came from WP Rocket.
+	 * @param string            $prefix      Trusted leading alternative, if any.
+	 * @param string            $wrap_open   Wrapper the directive applies, if any.
+	 * @param string            $wrap_close
+	 * @param array<int,string> $subjects    Representative inputs for this directive.
+	 * @return array{accepted: array<int,string>, rejected: array<int,string>, from_rocket: array<int,string>}
+	 */
+	private function partition_fragments( array $candidates, array $from_rocket, $prefix = '', $wrap_open = '', $wrap_close = '', array $subjects = array() ) {
+		$accepted = array();
+		$rejected = array();
+
+		foreach ( $candidates as $fragment ) {
+			if ( ! $this->is_usable_regex_fragment( $fragment, $subjects ) ) {
+				$rejected[] = $fragment;
+				continue;
+			}
+
+			$parts = $accepted;
+			$parts[] = $fragment;
+
+			$joined = implode( '|', $parts );
+			if ( '' !== $prefix ) {
+				$joined = $prefix . '|' . $joined;
+			}
+
+			if ( ! $this->compiles( $wrap_open . $joined . $wrap_close ) ) {
+				$rejected[] = $fragment;
+				continue;
+			}
+
+			$accepted[] = $fragment;
+		}
+
+		return array(
+			'accepted'    => $accepted,
+			'rejected'    => $rejected,
+			'from_rocket' => $from_rocket,
+		);
+	}
+
+	/**
+	 * WP Rocket exclusions are typed by hand and land verbatim inside a PCRE
+	 * alternation in the generated directives. A fragment that does not compile
+	 * would make Apache reject the whole directive, and a fragment that behaves
+	 * as a universal match would exclude every request and silently kill the cache.
+	 * Either way the fragment is dropped rather than shipped.
+	 *
+	 * @param string            $fragment
+	 * @param array<int,string> $subjects Representative inputs for the target directive.
+	 * @return bool
+	 */
+	public function is_usable_regex_fragment( $fragment, array $subjects = array() ) {
+		$fragment = (string) $fragment;
+		if ( '' === $fragment ) {
+			return false;
+		}
+
+		// Wrapped in a group because the fragment is alternated with "|" in the
+		// final directive: "foo)" compiles alone but breaks the combined pattern.
+		$wrapped = '(?:' . $fragment . ')';
+		if ( empty( $subjects ) ) {
+			$subjects = array_merge( $this->representative_uri_subjects(), $this->representative_ua_subjects(), $this->representative_cookie_subjects() );
+		}
+
+		return $this->compiles( $wrapped ) && ! $this->matches_every_representative_subject( $wrapped, $subjects );
+	}
+
+	/**
+	 * @param string $pattern
+	 * @return bool
+	 */
+	private function compiles( $pattern ) {
+		$delimiter = $this->pick_delimiter( $pattern );
+		if ( '' === $delimiter ) {
+			return false;
+		}
+
+		return false !== @preg_match( $delimiter . $pattern . $delimiter, '' ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+	}
+
+	/**
+	 * Detects fragments that behave as universal matches across representative
+	 * non-empty subjects for one directive. Empty subjects are deliberately not
+	 * part of the universal set: anchored patterns such as "^$" legitimately
+	 * target absence, while ".+" still excludes every real non-empty value.
+	 *
+	 * @param string            $pattern
+	 * @param array<int,string> $subjects
+	 * @return bool
+	 */
+	private function matches_every_representative_subject( $pattern, array $subjects ) {
+		$delimiter = $this->pick_delimiter( $pattern );
+		if ( '' === $delimiter ) {
+			return false;
+		}
+
+		$non_empty_subjects = array_values( array_filter( $subjects, static function ( $subject ) {
+			return '' !== (string) $subject;
+		} ) );
+
+		if ( empty( $non_empty_subjects ) ) {
+			return false;
+		}
+
+		foreach ( $non_empty_subjects as $subject ) {
+			if ( 1 !== @preg_match( $delimiter . $pattern . $delimiter, $subject ) ) { // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * Request URIs are non-empty absolute paths in the Apache directive.
+	 *
+	 * @return array<int,string>
+	 */
+	private function representative_uri_subjects() {
+		return array( '/', '/wmrb-probe', '/index.php', '/shop/product', '/ca/noticies/article' );
+	}
+
+	/**
+	 * @return array<int,string>
+	 */
+	private function representative_ua_subjects() {
+		return array( '', 'Mozilla/5.0', 'Googlebot/2.1', 'curl/8.0' );
+	}
+
+	/**
+	 * @return array<int,string>
+	 */
+	private function representative_cookie_subjects() {
+		return array( '', 'wordpress_logged_in_hash=value', 'wmrb_cookie=value', 'foo=bar; baz=qux' );
+	}
+
+	private function pick_delimiter( $pattern ) {
+		foreach ( array( '#', '~', '%', '!', '@', ';', ',', '=' ) as $candidate ) {
+			if ( false === strpos( $pattern, $candidate ) ) {
+				return $candidate;
+			}
+		}
+
+		return '';
+	}
+
+	/**
+	 * Exclusions coming from WP Rocket that had to be dropped, for display in
+	 * the admin screen. Uses exactly the pipeline that builds the snippet, so
+	 * the two can never disagree.
+	 *
+	 * @return array<int,array<string,string>>
+	 */
+	public function get_rejected_patterns() {
+		$sources = array(
+			'cache_reject_uri'     => $this->resolve_uri_fragments(),
+			'cache_reject_ua'      => $this->resolve_ua_fragments(),
+			'cache_reject_cookies' => $this->resolve_cookie_fragments(),
+		);
+
+		$rejected = array();
+
+		foreach ( $sources as $setting => $resolved ) {
+			foreach ( $resolved['rejected'] as $pattern ) {
+				// Baseline fragments never fail; only report what the user can fix.
+				if ( ! in_array( $pattern, $resolved['from_rocket'], true ) ) {
+					continue;
+				}
+
+				$rejected[] = array(
+					'setting' => $setting,
+					'pattern' => $pattern,
+				);
+			}
+		}
+
+		return $rejected;
 	}
 
 	/**
@@ -359,6 +586,10 @@ class WMRB_Snippet_Service {
 	 * @return array<string,mixed>
 	 */
 	private function get_wp_rocket_settings() {
+		if ( null !== $this->rocket_settings_override ) {
+			return $this->rocket_settings_override;
+		}
+
 		$settings = get_option( 'wp_rocket_settings', array() );
 		return is_array( $settings ) ? $settings : array();
 	}

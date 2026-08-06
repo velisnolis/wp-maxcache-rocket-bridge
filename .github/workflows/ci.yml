@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # The floor the plugin header promises, and a current release.
+        php: ['7.4', '8.3']
+    name: PHP ${{ matrix.php }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+
+      - name: Lint every PHP file
+        run: find . -path ./vendor -prune -o -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      # PHPUnit 11 needs PHP 8.2+, so the 7.4 job proves the plugin still
+      # parses there without pretending to run the suite.
+      - name: Install dependencies
+        if: matrix.php != '7.4'
+        run: composer install --no-interaction --no-progress
+
+      - name: Run tests
+        if: matrix.php != '7.4'
+        run: composer test
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the distributable archive
+        run: ./build.sh dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: plugin-zip
+          path: dist/wp-maxcache-rocket-bridge.zip

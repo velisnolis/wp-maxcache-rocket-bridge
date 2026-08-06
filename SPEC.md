@@ -21,11 +21,13 @@ The product goal is not "a second cache console". The target flow is:
 
 ## Validated Context
 
-- `milatalent.cat` uses the original AccelerateWP-style single-block pattern
-- `reliquiaesanctorumincatalonia.cat` was migrated in a real test to `managed mode`
+Behaviour below was confirmed against production sites on a CloudLinux host. The sites are referred to by label; identifying them adds nothing to the specification.
+
+- `site A` runs the original AccelerateWP-style single-block pattern
+- `site B` was migrated in a real test to `managed mode`
 - `cf-cache-status: DYNAMIC` is acceptable when origin still serves the correct static pattern
-- `www.injecciodeplastics.com` / `www.inyecciondeplastico.es` validated multilingual multi-domain handling through `{HTTP_HOST}`
-- `www.injecciodeplastics.com` also validated the real `cache_webp` case
+- `site C`, a multilingual pair of domains sharing one install, validated multi-domain handling through `{HTTP_HOST}`
+- `site C` also validated the real `cache_webp` case
 
 ## Non-Goals
 
@@ -74,9 +76,25 @@ Designed for real sites that already have manual or AccelerateWP-managed `MaxCac
 Steps:
 
 1. backup `.htaccess`
-2. remove all `maxcache_module` blocks
+2. remove all `maxcache_module` blocks, matched by nesting depth rather than by regex
 3. write a single WMRB block
 4. move to `managed` + `in_sync`
+
+Takeover refuses to run when the file contains an unterminated `<IfModule>` section.
+
+### Observed Apache behaviour
+
+Measured against Apache with `mod_maxcache` on a live CloudLinux host:
+
+| Condition | Result |
+| --- | --- |
+| `MaxCacheExcludeURI` regex that does not compile | `200`, still cached — exclusions silently discarded |
+| `MaxCacheExcludeURI` matching every request | `200`, all requests fall through to PHP — cache silently off |
+| unknown directive inside the block | `500` |
+| orphaned `</IfModule>` | `500` |
+| file truncated mid-section | `200`, cache off |
+
+Nothing is written to the error log in the silent cases, which is why the bridge validates patterns itself instead of relying on the server to complain.
 
 ### 4. Sync With WP Rocket
 
@@ -135,7 +153,7 @@ Single screen in `Tools > MAxCache Bridge` with:
 - environment checks
 - MaxCache ownership mode
 - sync summary with `WP Rocket`
-- `in_sync / pending_apply` state
+- `in_sync / pending_apply / applied_unverified` state
 - actions:
   - `Run checks`
   - `Apply snippet now`
@@ -151,30 +169,45 @@ Single screen in `Tools > MAxCache Bridge` with:
 - WordPress nonces on admin actions
 - minimum capability: `manage_options`
 - no auto-apply when external ownership or conflict is detected
+- every exclusion inherited from `WP Rocket` must compile as a regex on its own, must not behave as a universal match across representative inputs specific to its directive (URI, user-agent, or cookie), and must still compile once combined with the others, or it is dropped and reported
+- `.htaccess` writes go through a temporary file and `rename()`, preserving mode and group; there is no non-atomic fallback, and the operation is refused when an atomic rename is impossible
+- writes hold an exclusive lock, and the file is re-read and compared immediately before the rename so a concurrent change is never clobbered
+- writes are verified with a tokenised probe whose response must echo the token back, retried a few times, and reverted automatically when a healthy site stops answering — but only while the file is still exactly what the bridge wrote
+- a write that would not change the file is skipped entirely (no backup, no probes)
+- takeover parses section tags as directives only, ignoring comments and quoted literals, and declines on ambiguous syntax
 
 ## Validation
 
 ### Case 1: Original AccelerateWP Pattern
 
-- `milatalent.cat`
+- `site A`: WordPress + WP Rocket, AccelerateWP-managed
 - single `MaxCache` block
 - correct origin headers
 
 ### Case 2: Takeover To Managed Mode
 
-- `reliquiaesanctorumincatalonia.cat`
-- pre-existing MaxCache configuration
+- `site B`: pre-existing MaxCache configuration not written by the bridge
 - takeover executed with backup
 - final state `managed` + `in_sync`
 - correct origin behaviour after the change
 
 ### Case 3: Multi-Domain + WebP
 
-- `www.injecciodeplastics.com`
-- `www.inyecciondeplastico.es`
+- `site C`: two language domains served from one install, behind Cloudflare
 - real validation of `{HTTP_HOST}` by language/domain
 - real validation of `cache_webp = 1`
 - temporary fallback test to non-WebP path and later restoration
+
+### Case 4: Apache Failure Modes
+
+Measured directly against `mod_maxcache` by writing each condition into a live
+`.htaccess` and requesting the origin. Full results under *Observed Apache
+behaviour* in section 3.
+
+- a non-compiling exclusion regex is not fatal, but the exclusions are lost silently
+- an exclusion matching every request disables the cache silently
+- an unknown directive, or an orphaned `</IfModule>`, returns `500` for every request
+- none of the silent cases write anything to the error log
 
 ## Current Release Scope
 

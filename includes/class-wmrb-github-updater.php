@@ -5,7 +5,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class WMRB_Github_Updater {
-	const CACHE_TRANSIENT = 'wmrb_github_release_data';
+	const CACHE_TRANSIENT   = 'wmrb_github_release_data';
+	const SUCCESS_LIFETIME  = HOUR_IN_SECONDS;
+	const FAILURE_LIFETIME  = 15 * MINUTE_IN_SECONDS;
 
 	/**
 	 * @var string
@@ -33,7 +35,7 @@ class WMRB_Github_Updater {
 	}
 
 	public function check_for_updates( $transient ) {
-		if ( empty( $transient->checked ) || ! is_object( $transient ) ) {
+		if ( ! is_object( $transient ) || empty( $transient->checked ) ) {
 			return $transient;
 		}
 
@@ -86,8 +88,12 @@ class WMRB_Github_Updater {
 	 */
 	private function get_latest_release() {
 		$cached = get_transient( self::CACHE_TRANSIENT );
-		if ( is_array( $cached ) && ! empty( $cached['version'] ) ) {
-			return $cached;
+		if ( is_array( $cached ) ) {
+			// Failures are cached too, as an empty array. Without that, every
+			// update check pays for another blocking request — and GitHub's
+			// unauthenticated limit is 60 requests per hour per IP, which on
+			// shared hosting is an IP the site does not have to itself.
+			return ! empty( $cached['version'] ) ? $cached : array();
 		}
 
 		$response = wp_remote_get(
@@ -102,17 +108,17 @@ class WMRB_Github_Updater {
 		);
 
 		if ( is_wp_error( $response ) ) {
-			return array();
+			return $this->remember_failure();
 		}
 
 		$code = (int) wp_remote_retrieve_response_code( $response );
 		if ( 200 !== $code ) {
-			return array();
+			return $this->remember_failure();
 		}
 
 		$body = json_decode( (string) wp_remote_retrieve_body( $response ), true );
 		if ( ! is_array( $body ) ) {
-			return array();
+			return $this->remember_failure();
 		}
 
 		$tag = isset( $body['tag_name'] ) ? (string) $body['tag_name'] : '';
@@ -133,9 +139,12 @@ class WMRB_Github_Updater {
 			}
 		}
 
-		// Fallback: source zip from release tag.
-		if ( '' === $package && '' !== $tag ) {
-			$package = 'https://github.com/' . WMRB_GITHUB_REPO . '/archive/refs/tags/' . rawurlencode( $tag ) . '.zip';
+		// There is deliberately no fallback to GitHub's source archive. That
+		// archive is the repository, not the plugin: it unpacks under a
+		// version-suffixed directory and now carries the test suite, the build
+		// script and the CI configuration. A missing asset means no update.
+		if ( '' === $package ) {
+			return $this->remember_failure();
 		}
 
 		$data = array(
@@ -145,7 +154,18 @@ class WMRB_Github_Updater {
 			'body'    => $release_body,
 		);
 
-		set_transient( self::CACHE_TRANSIENT, $data, HOUR_IN_SECONDS );
+		set_transient( self::CACHE_TRANSIENT, $data, self::SUCCESS_LIFETIME );
 		return $data;
+	}
+
+	/**
+	 * Caches the fact that the lookup failed, so a broken or rate-limited
+	 * GitHub does not cost a blocking request on every single update check.
+	 *
+	 * @return array<string,string>
+	 */
+	private function remember_failure() {
+		set_transient( self::CACHE_TRANSIENT, array(), self::FAILURE_LIFETIME );
+		return array();
 	}
 }

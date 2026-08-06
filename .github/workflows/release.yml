@@ -1,0 +1,65 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # PHP 7.4 proves the declared syntax floor; PHPUnit 11 runs on 8.3.
+        php: ['7.4', '8.3']
+    name: Verify PHP ${{ matrix.php }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+
+      - name: Lint every PHP file
+        run: find . -path ./vendor -prune -o -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: Install dependencies
+        if: matrix.php != '7.4'
+        run: composer install --no-interaction --no-progress
+
+      - name: Run tests
+        if: matrix.php != '7.4'
+        run: composer test
+
+  release:
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Tag must match the plugin version
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          VERSION="$(sed -n 's/^ \* Version: *\(.*\)$/\1/p' wp-maxcache-rocket-bridge.php | head -1)"
+          if [ "$TAG" != "$VERSION" ]; then
+            echo "tag $TAG does not match plugin version $VERSION" >&2
+            exit 1
+          fi
+
+      - name: Build
+        run: ./build.sh dist
+
+      # The updater accepts only an asset named exactly
+      # wp-maxcache-rocket-bridge.zip; publishing without it must fail.
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes \
+            dist/wp-maxcache-rocket-bridge.zip
