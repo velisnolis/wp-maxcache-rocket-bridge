@@ -26,6 +26,12 @@ final class ReleaseWorkflowTest extends TestCase {
 		$this->assertLessThan( $publish, $tests );
 	}
 
+	public function test_release_publication_is_idempotent(): void {
+		$this->assertStringContainsString( 'gh release view "$GITHUB_REF_NAME"', $this->workflow );
+		$this->assertStringContainsString( 'gh release upload "$GITHUB_REF_NAME"', $this->workflow );
+		$this->assertStringContainsString( '--clobber', $this->workflow );
+	}
+
 	public function test_build_accepts_a_relative_output_directory(): void {
 		$root     = dirname( __DIR__ );
 		$relative = '.dist/release-workflow-' . uniqid();
