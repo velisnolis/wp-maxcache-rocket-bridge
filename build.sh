@@ -15,6 +15,13 @@ SLUG="wp-maxcache-rocket-bridge"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OUT_DIR="${1:-$ROOT/release}"
 
+# The archive is created while the process is inside a temporary staging
+# directory. Resolve caller-provided relative paths before changing directory.
+case "$OUT_DIR" in
+	/*) ;;
+	*) OUT_DIR="$ROOT/$OUT_DIR" ;;
+esac
+
 # Everything that belongs in a running plugin, and nothing else.
 ALLOW=(
 	"$SLUG.php"

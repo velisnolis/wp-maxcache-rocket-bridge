@@ -25,4 +25,26 @@ final class ReleaseWorkflowTest extends TestCase {
 		$this->assertNotFalse( $publish );
 		$this->assertLessThan( $publish, $tests );
 	}
+
+	public function test_build_accepts_a_relative_output_directory(): void {
+		$root     = dirname( __DIR__ );
+		$relative = '.dist/release-workflow-' . uniqid();
+		$zip      = $root . '/' . $relative . '/wp-maxcache-rocket-bridge.zip';
+		$output   = array();
+		$status   = 0;
+
+		exec(
+			'cd ' . escapeshellarg( $root ) . ' && ./build.sh ' . escapeshellarg( $relative ) . ' 2>&1',
+			$output,
+			$status
+		);
+
+		try {
+			$this->assertSame( 0, $status, implode( "\n", $output ) );
+			$this->assertFileExists( $zip );
+		} finally {
+			@unlink( $zip );
+			@rmdir( dirname( $zip ) );
+		}
+	}
 }
